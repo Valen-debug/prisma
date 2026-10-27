@@ -3,10 +3,16 @@
 {% block encabezado %}{% endblock %}
 {% block contenido %}
 {% set alertas = r.criticos + r.altos %}
-<section class="hello mb-3">
+<section class="hello executive-welcome mb-3">
   <div>
+    <span class="eyebrow">DIRECCIÓN Y ESTRATEGIA</span>
     <h1>{{ T.inicio_titulo }} {{ 'en el escenario simulado' if escenarios else 'hoy' }}</h1>
+<<<<<<< Updated upstream
     <p>{{ r.senales }} señales de campo en {{ r.municipios }} {{ T.unidades }} y {{ r.variables }} variables técnicas.
+=======
+    <p>{{ r.senales }} señales validadas en los últimos 60 días · {{ r.municipios }} {{ T.unidades }} · {{ r.variables }} variables técnicas.
+      {% if r.senales_sin_variable %}{{ r.senales_sin_variable }} señales aún no tienen variable asignada.{% endif %}
+>>>>>>> Stashed changes
       {% if r.criticos %}{{ r.criticos }} {{ 'riesgo está' if r.criticos == 1 else 'riesgos están' }} en nivel crítico.{% endif %}
       {% if r.por_validar %}{{ r.por_validar }} reportes esperan validación.{% endif %}</p>
   </div>
@@ -17,6 +23,13 @@
   {% endif %}
 </section>
 
+<section class="workspace-metrics" aria-label="Indicadores generales">
+  <a class="metric-card" href="{{ url_for('tablero') }}#t-alertas"><span>Riesgos prioritarios</span><strong>{{ alertas }}</strong><small>{{ r.criticos }} críticos · {{ r.altos }} altos</small></a>
+  <a class="metric-card" href="{{ url_for('voz') }}"><span>Señales por validar</span><strong>{{ r.por_validar }}</strong><small>Pendientes de revisión del equipo</small></a>
+  <a class="metric-card" href="{{ url_for('decisiones') }}"><span>Decisiones pendientes</span><strong>{{ r.pendientes }}</strong><small>Requieren análisis o aprobación</small></a>
+  <a class="metric-card" href="{{ url_for('decisiones') }}#t-compromisos"><span>Compromisos aprobados</span><strong>{{ r.compromisos }}</strong><small>Responsables y seguimiento</small></a>
+</section>
+
 {% for x in entrando[:1] %}
 <div class="entrada mb-3"><i class="fa fa-tower-broadcast"></i>
   <div><b>Alerta temprana: puede estar empezando el escenario «{{ x.nombre }}».</b><br>
@@ -25,7 +38,7 @@
 </div>{% endfor %}
 
 <section class="q3 mb-4">
-  <div class="panel"><h2><span><span class="n">1</span>¿Qué está pasando?</span></h2>
+  <div class="panel"><h2><span><span class="n">1</span>Riesgos y señales</span></h2>
     {% for v in urgentes %}
     <div class="item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
       <div><div class="t">{{ v.nombre.split('(')[0] }}</div>
@@ -36,14 +49,14 @@
         <div class="d">{{ emergentes|map(attribute='tema')|join(' · ') }}</div></div></div>{% endif %}
     <a class="ver" href="{{ url_for('voz') }}">Ver la {{ T.voz|lower }} <i class="fa fa-arrow-right ms-1"></i></a>
   </div>
-  <div class="panel"><h2><span><span class="n">2</span>¿Qué hacemos?</span></h2>
+  <div class="panel"><h2><span><span class="n">2</span>Decisiones prioritarias</span></h2>
     {% for v in por_revisar %}
     <div class="item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
       <div><div class="t">{{ v.decision }}</div><div class="d">Por {{ v.nombre.split(':')[0].split('(')[0]|lower }} · {{ v.responsable }}</div></div></div>
     {% else %}<div class="item text-muted">No hay decisiones por revisar.</div>{% endfor %}
     <a class="ver" href="{{ url_for('decisiones') }}">{{ r.pendientes }} decisiones por revisar <i class="fa fa-arrow-right ms-1"></i></a>
   </div>
-  <div class="panel"><h2><span><span class="n">3</span>¿Quién responde?</span></h2>
+  <div class="panel"><h2><span><span class="n">3</span>Compromisos y responsables</span></h2>
     {% for c in compromisos %}
     <div class="item"><span class="avance {{ c.avance.split()[0] }}">{{ c.avance }}</span>
       <div><div class="t">{{ c.decision }}</div><div class="d"><i class="fa fa-handshake"></i> {{ c.actores }}{% if c.fecha_limite %} · antes del {{ c.fecha_limite }}{% endif %}</div></div></div>
@@ -52,7 +65,7 @@
   </div>
 </section>
 
-<div class="sect"><h2>Lectura PESTEL</h2><p>Haga clic en un factor para ver sus variables</p></div>
+<div class="sect"><h2>Distribución del riesgo por factor</h2><p>Análisis PESTEL · Seleccione un factor para consultar el detalle</p></div>
 <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-2">
   <div class="legend"><span><i class="sw"></i>Lectura técnica</span><span><i class="sw com"></i>{{ T.lectura_gente }}</span></div>
 </div>
@@ -73,7 +86,11 @@
 <section class="voice-strip">
   <div>
     <h3><i class="fa fa-bullhorn me-1" style="color:var(--sky)"></i> {{ T.voz }}</h3>
+<<<<<<< Updated upstream
     <p>{{ r.senales }} señales de campo ya validadas.{% if r.por_validar %} {{ r.por_validar }} esperan validación.{% endif %}</p>
+=======
+    <p>{{ r.senales }} señales validadas en los últimos 60 días.{% if r.por_validar %} {{ r.por_validar }} esperan validación.{% endif %}</p>
+>>>>>>> Stashed changes
     <a class="btn btn-ochre btn-sm" href="{{ url_for('voz') }}#invitar"><i class="fa fa-qrcode"></i>Invitar a reportar</a>
   </div>
   <div>

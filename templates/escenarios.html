@@ -8,13 +8,14 @@
 </div>
 {% endblock %}
 {% block contenido %}
-<div class="tab-content page">
+<div class="tab-content page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">PLANEACIÓN ESTRATÉGICA</span><h2>Explore posibles cambios del entorno</h2><p>Construya hipótesis, combine escenarios y compare su impacto antes de definir acciones.</p></div><div class="summary-meta"><strong>{{ escenarios|length }}</strong><span>escenarios activos de {{ lista|length }} disponibles</span></div></section>
   <div class="tab-pane fade show active" id="t-elegir" role="tabpanel">
     <p class="intro">Active uno o varios escenarios para ver cómo cambiaría el entorno ({{ T.sector }}). Se pueden combinar. El tablero, los compromisos y el informe se actualizan con lo que esté simulando. Los escenarios mueven la lectura técnica; lo que reporta {{ T.gente }} no cambia.</p>
     {% if session.rol in ('analista', 'directivo') %}
-    <form class="whatif mb-4" method="post" action="{{ url_for('escenario_proponer') }}">
-      <span class="pre"><i class="fa fa-wand-magic-sparkles me-2"></i>¿Y si…</span>
-      <input class="form-control" name="pregunta" required minlength="6" placeholder="…el nuevo gobierno recorta los programas rurales y además hay paro camionero?" aria-label="Pregunta del escenario">
+    <form class="whatif scenario-composer mb-4" method="post" action="{{ url_for('escenario_proponer') }}">
+      <span class="pre"><i class="fa fa-code-branch me-2"></i>Hipótesis</span>
+      <input class="form-control" name="pregunta" required minlength="6" placeholder="Describa un cambio del entorno y sus posibles efectos" aria-label="Pregunta del escenario">
       <button class="btn btn-primary text-nowrap" onclick="if(this.form.checkValidity()){this.disabled=true;this.form.submit();this.innerHTML='<span class=&quot;spinner-border spinner-border-sm&quot;></span> Pensando…'}">Crear escenario</button>
     </form>{% endif %}
     {% if entrando %}<p class="small mb-3" style="color:#7A2414"><i class="fa fa-tower-broadcast me-1"></i>Los escenarios marcados en rojo <b>ya están empezando a pasar</b>: hay {{ entrada_min }} o más señales validadas en los últimos {{ entrada_dias }} días sobre sus variables.</p>{% endif %}

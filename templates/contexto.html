@@ -2,11 +2,17 @@
 {% block titulo %}Contexto{% endblock %}
 {% block h1 %}{{ T.contexto_titulo }}{% endblock %}
 {% block contenido %}
+<<<<<<< Updated upstream
 <div class="page">
   <p class="intro">Hechos públicos que sustentan las calificaciones técnicas de la demostración. Los lugares son ejemplos para mostrar el funcionamiento; las señales de campo son datos de demostración, no reportes reales.</p>
+=======
+<div class="page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">CONTEXTO Y TRAZABILIDAD</span><h2>Información que respalda la lectura del entorno</h2><p>Consulte los antecedentes, las fuentes y los actores asociados a la organización.</p></div><div class="summary-meta"><strong>{{ fuentes|length }}</strong><span>fuentes de referencia</span></div></section>
+  <p class="intro">Hechos públicos que sustentan las calificaciones técnicas de la demostración. Los lugares son ejemplos para mostrar el funcionamiento; las señales son datos de demostración, no reportes reales.</p>
+>>>>>>> Stashed changes
 
   <div class="row g-4">
-    <div class="col-lg-7"><section class="panel h-100"><h2>Lo que está pasando</h2>
+    <div class="col-lg-7"><section class="panel h-100"><h2>Antecedentes del entorno</h2>
       {% for clase, icono, titulo, texto, fuente in contexto %}
       <div class="row-item c-{{ clase }}"><span class="ic-lg"><i class="fa {{ icono }}"></i></span>
         <div><div class="t">{{ titulo }}</div><div class="d">{{ texto }} <i>{{ fuente }}.</i></div></div><span></span></div>
@@ -14,7 +20,7 @@
     </section></div>
 
     <div class="col-lg-5">
-      <section class="panel"><h2>Quiénes responden</h2><div class="body">
+      <section class="panel"><h2>Actores y responsabilidades</h2><div class="body">
         <p class="muted small">Los compromisos se asignan a estos actores. La lista se configura para cada organización.</p>
         <div class="d-flex flex-wrap gap-1">{% for a in ACTORES %}<span class="chip"><i class="fa fa-handshake"></i>{{ a }}</span>{% endfor %}</div>
       </div></section>

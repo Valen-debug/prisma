@@ -10,23 +10,28 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
 </head>
-<body class="rep">
-<header class="rep-top">
+<body class="rep public-page">
+<header class="rep-top"><div class="public-header-inner">
   <div class="d-flex justify-content-between align-items-center gap-2">
     <div class="brand">{{ marca(true) }}</div>
-    <span class="net" id="red"><i class="fa fa-wifi"></i> En línea</span>
+    <span class="net" id="red" role="status" aria-live="polite"><i class="fa fa-wifi"></i> En línea</span>
   </div>
+  <span class="public-kicker">PARTICIPACIÓN Y ESCUCHA</span>
   <h1>{{ T.form_titulo }}</h1>
   <p>{{ T.form_intro }}</p>
-</header>
+  <a class="public-header-link" href="{{ url_for('seguimiento') }}">Consultar los compromisos <i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+</div></header>
 
 <main class="rep-body" id="formulario">
+  <div class="public-form-intro"><span>REGISTRO DE UNA SEÑAL</span><p>Ubique el reporte, describa la situación y revise la información antes de enviarla.</p></div>
   <form id="f" novalidate>
     <input type="text" name="sitio_web" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
 
     <section class="rep-step">
       <h2><span class="num">1</span>¿En qué {{ T.unidad }}?</h2>
+      <label class="visually-hidden" for="municipio">Seleccione {{ T.unidad }}</label>
       <select class="form-select form-select-lg" name="municipio" id="municipio" required>
         <option value="">Elija {{ 'su' }} {{ T.unidad }}</option>
         {% for m in municipios %}<option value="{{ m.id }}" {{ 'selected' if request.args.get('m') == m.id }}>{{ m.nombre }} ({{ m.departamento }})</option>{% endfor %}
@@ -36,7 +41,8 @@
     <section class="rep-step">
       <h2><span class="num">2</span>¿Qué está pasando?</h2>
       <div class="relato">
-        <textarea class="form-control" name="descripcion" id="descripcion" rows="4" maxlength="600"
+        <label class="visually-hidden" for="descripcion">Descripción de la situación</label>
+        <textarea aria-describedby="ayuda-voz" class="form-control" name="descripcion" id="descripcion" rows="4" maxlength="600"
                   placeholder="{{ T.form_ejemplo }}"></textarea>
         <div class="relato-bar">
           <button type="button" class="btn-mic" id="mic" hidden><i class="fa fa-microphone"></i><span>Hablar</span></button>

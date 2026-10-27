@@ -11,7 +11,7 @@ Brecha = lectura comunitaria - lectura técnica.
   -6 o menos: la comunidad lo percibe menos (necesita información o pedagogía).
 Nivel efectivo = el mayor entre la lectura técnica y la comunitaria; es el que activa alertas y decisiones.
 """
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from database import FACTORES, hora_local
 
@@ -136,6 +136,89 @@ def decisiones_sugeridas(variables):
     items = [v for v in variables
              if (v["tipo"] == "R" and v["efectivo"] >= 10) or (v["tipo"] == "O" and v["efectivo"] >= 12)]
     return sorted(items, key=lambda v: v["efectivo"], reverse=True)
+
+
+def distribucion_grafico(conteos, limite=None, resto="Otros"):
+    """Agrupa categorías conservando el total, incluso al limitar las barras."""
+    filas = [{"etiqueta": k, "cantidad": v} for k, v in conteos.items()]
+    filas.sort(key=lambda x: (-x["cantidad"], x["etiqueta"]))
+    if limite and len(filas) > limite:
+        filas = filas[:limite - 1] + [{"etiqueta": resto, "cantidad": sum(f["cantidad"] for f in filas[limite - 1:])}]
+    return filas
+
+
+def graficos_senales(filas, ver_sensible=False):
+    estados = {"Validada": 0, "Por validar": 0, "Descartada": 0}
+    temas, lugares = {}, {}
+    for s in filas:
+        estado = s["estado"]
+        estados[estado] = estados.get(estado, 0) + 1
+        if estado == "Descartada":
+            continue
+        tema = "Tema reservado" if s.get("sensible") and not ver_sensible else (s.get("variable") or "Sin tema asignado")
+        lugar = s.get("municipio") or "Sin ubicación"
+        temas[tema] = temas.get(tema, 0) + 1
+        lugares[lugar] = lugares.get(lugar, 0) + 1
+    return {"estados": [{"etiqueta": k, "cantidad": v} for k, v in estados.items()],
+            "temas": distribucion_grafico(temas, 6, "Resto de temas"),
+            "lugares": distribucion_grafico(lugares, 6, "Resto de ubicaciones")}
+
+
+def graficos_compromisos(compromisos, estados):
+    avances = {"Sin iniciar": 0, "En curso": 0, "Cumplido": 0, "Atrasado": 0}
+    responsables = {}
+    for v in compromisos:
+        e = estados[v["id"]]
+        avance = e.get("avance") or "Sin iniciar"
+        avances[avance] = avances.get(avance, 0) + 1
+        actores = set(a.strip() for a in (e.get("actores") or "").split(",") if a.strip()) or {"Sin asignar"}
+        for actor in actores:
+            responsables[actor] = responsables.get(actor, 0) + 1
+    return {"avances": [{"etiqueta": k, "cantidad": v} for k, v in avances.items()],
+            "responsables": distribucion_grafico(responsables, 6, "Resto de responsables")}
+
+
+def actividad_tablero(con, fecha=None):
+    """Conteos de recepción, no historia de riesgo ni de fechas de validación."""
+    fecha = (fecha or hora_local()).replace(second=0, microsecond=0)
+    desde = fecha - timedelta(days=VENTANA_DIAS)
+    lunes = fecha.replace(hour=0, minute=0) - timedelta(days=fecha.weekday(), weeks=7)
+    semanas = []
+    for i in range(8):
+        inicio = lunes + timedelta(weeks=i)
+        fin = min((inicio + timedelta(days=6)).date(), fecha.date())
+        semanas.append({"inicio": inicio.strftime("%Y-%m-%d"),
+                        "etiqueta": f"{inicio:%d/%m}–{fin:%d/%m}",
+                        "validadas": 0, "pendientes": 0, "descartadas": 0, "otros": 0})
+    validadas = vinculadas = 0
+    por_lugar = {}
+    filas = con.execute("SELECT fecha, estado, variable_id, municipio_id FROM senales WHERE fecha >= ? AND fecha <= ?",
+                        (min(desde, lunes).strftime("%Y-%m-%d %H:%M"), fecha.strftime("%Y-%m-%d %H:%M")))
+    claves = {"Validada": "validadas", "Por validar": "pendientes", "Descartada": "descartadas"}
+    for fila in filas:
+        try:
+            recibida = datetime.strptime(fila["fecha"][:16], "%Y-%m-%d %H:%M")
+        except (ValueError, TypeError):
+            continue
+        if recibida >= desde and fila["estado"] == "Validada":
+            validadas += 1
+            vinculadas += int(fila["variable_id"] is not None)
+            mid = fila["municipio_id"]
+            por_lugar[mid] = por_lugar.get(mid, 0) + 1
+        if recibida >= lunes:
+            indice = (recibida.date() - lunes.date()).days // 7
+            semanas[indice][claves.get(fila["estado"], "otros")] += 1
+    avances = {"Sin iniciar": 0, "En curso": 0, "Cumplido": 0, "Atrasado": 0}
+    for fila in con.execute("SELECT avance, COUNT(*) AS n FROM decisiones WHERE estado = 'Aprobada' GROUP BY avance"):
+        estado = fila["avance"] or "Sin iniciar"
+        avances[estado] = avances.get(estado, 0) + fila["n"]
+    pendientes = con.execute("SELECT COUNT(*) FROM senales WHERE estado = 'Por validar'").fetchone()[0]
+    return {"validadas": validadas, "vinculadas": vinculadas, "sin_variable": validadas - vinculadas,
+            "pendientes": pendientes, "por_lugar": por_lugar, "semanas": semanas,
+            "recibidas": sum(sum(s[k] for k in ("validadas", "pendientes", "descartadas", "otros")) for s in semanas),
+            "compromisos": [{"estado": k, "cantidad": v} for k, v in avances.items()],
+            "total_compromisos": sum(avances.values()), "desde": desde.strftime("%d/%m/%Y"),
+            "hasta": fecha.strftime("%d/%m/%Y"), "actualizado": fecha.strftime("%d/%m/%Y · %H:%M")}
 
 
 # ---------------------------------------------------------------- señales de entrada de los escenarios

@@ -7,19 +7,32 @@
 </div>
 {% endblock %}
 {% block contenido %}
-<div class="tab-content page">
+<section class="module-summary mt-4">
+  <div><span class="section-kicker">ADMINISTRACIÓN Y TRAZABILIDAD</span><h2>Control de actividad y accesos</h2>
+    <p>Consulte el historial de cambios y los permisos asignados a cada rol de la organización.</p></div>
+</section>
+<section class="workspace-metrics" aria-label="Resumen de administración">
+  <div class="metric-card"><span>Registros en la bitácora</span><strong>{{ filas|length }}</strong></div>
+  <div class="metric-card"><span>Usuarios registrados</span><strong>{{ usuarios|length }}</strong></div>
+</section>
+<div class="tab-content page pt-0">
   <div class="tab-pane fade show active" id="t-bit" role="tabpanel">
     <p class="intro">Cada ingreso y cada cambio queda registrado con quién lo hizo y cuándo.</p>
     <section class="panel"><div class="table-responsive"><table class="table">
-      <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
-      {% for r in filas %}<tr><td class="text-nowrap muted">{{ r.fecha }}</td><td>{{ r.usuario }}</td><td class="fw-medium">{{ r.accion }}</td><td class="muted">{{ r.detalle }}</td></tr>{% endfor %}
+      <thead><tr><th scope="col">Fecha</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Detalle</th></tr></thead><tbody>
+      {% for r in filas %}<tr><td class="text-nowrap muted">{{ r.fecha }}</td><td>{{ r.usuario }}</td><td class="fw-medium">{{ r.accion }}</td><td class="muted">{{ r.detalle }}</td></tr>{% else %}<tr><td colspan="4" class="empty">Todavía no hay actividad registrada.</td></tr>{% endfor %}
       </tbody></table></div></section>
   </div>
   <div class="tab-pane fade" id="t-roles" role="tabpanel">
     <div class="row g-4">
       <div class="col-lg-7"><section class="panel h-100"><div class="table-responsive"><table class="table">
+<<<<<<< Updated upstream
         <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Puede</th></tr></thead><tbody>
         {% set permisos = {'directivo': 'Consultar todo, aprobar decisiones y fijar compromisos', 'analista': 'Registrar variables, validar señales de campo y actualizar avances', 'ti': 'Gestionar fuentes, frecuencia, accesos y datos de ejemplo'} %}
+=======
+        <thead><tr><th scope="col">Usuario</th><th scope="col">Nombre</th><th scope="col">Rol</th><th scope="col">Permisos</th></tr></thead><tbody>
+        {% set permisos = {'directivo': 'Consultar todo, aprobar decisiones y fijar compromisos', 'analista': 'Registrar variables, validar señales y actualizar avances', 'ti': 'Gestionar fuentes, frecuencia, accesos y datos de ejemplo'} %}
+>>>>>>> Stashed changes
         {% for u in usuarios %}<tr><td class="fw-medium">{{ u.usuario }}</td><td>{{ u.nombre }}</td><td><span class="tag">{{ ROLES[u.rol] }}</span></td><td class="muted">{{ permisos[u.rol] }}</td></tr>{% endfor %}
         </tbody></table></div></section></div>
       <div class="col-lg-5"><section class="panel h-100"><h2>Datos de ejemplo</h2><div class="body">

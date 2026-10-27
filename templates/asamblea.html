@@ -8,9 +8,14 @@
 {% endblock %}
 {% block contenido %}
 <div class="page">
-<article class="ficha">
+<article class="ficha institutional-sheet">
+  <div class="sheet-label">LECTURA DEL ENTORNO <span>{{ T.ficha }}</span></div>
   <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+<<<<<<< Updated upstream
     <div><h1>¿Cómo está {{ m.nombre }}?</h1><div class="sub">Lo que dice {{ T.gente }} · {{ m.departamento }} · {{ hoy }}</div></div>
+=======
+    <div><h1>{{ m.nombre }}</h1><div class="sub">Lo que dicen {{ T.gente }} · {{ m.departamento }} · {{ hoy }}</div></div>
+>>>>>>> Stashed changes
     <div class="d-flex align-items-center gap-2">{{ logo() }}<b style="color:var(--navy)">{{ APP }}</b></div>
   </div>
 
@@ -18,7 +23,7 @@
   <p style="font-size:17px" class="mb-1"><b>{{ boletin.titular }}</b></p>
   <p>{{ boletin.que_pasa }}</p>{% endif %}
 
-  <h2>El semáforo</h2>
+  <h2>Estado por factor del entorno</h2>
   <div class="sem">
     {% for c in comunidad %}
     <div class="c-{{ c.clase }}"><div class="c"></div><b>{{ c.nombre }}</b><span>{{ c.nivel if c.indice is not none else 'Sin reportes' }}</span></div>
@@ -52,6 +57,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
 <script src="{{ url_for('static', filename='vendor/qrcode/qrcode.js') }}"></script>
 <script>const q = qrcode(0, 'M'); q.addData({{ url_for('reportar', m=m.id, _external=True)|tojson }}); q.make();
 document.getElementById('qr').innerHTML = q.createSvgTag({cellSize: 4, margin: 1, scalable: true});</script>

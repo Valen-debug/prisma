@@ -1,0 +1,13 @@
+{% macro grafico(id, titulo, kicker, filas, tipo, unidad, nota) %}
+<section class="dashboard-card operation-chart-card" aria-labelledby="{{ id }}-title">
+  <div class="dashboard-card-heading"><div><span class="dashboard-card-kicker">{{ kicker }}</span><h3 id="{{ id }}-title">{{ titulo }}</h3></div></div>
+  {% set total = filas|sum(attribute='cantidad') %}
+  {% if total %}
+  {% if tipo == 'doughnut' %}<div class="dashboard-donut"><canvas id="{{ id }}" data-operation-chart="{{ tipo }}" data-chart-values='{{ filas|tojson }}' role="img" aria-label="{{ titulo }}. Valores disponibles en la tabla inferior."></canvas><div class="dashboard-donut-total"><strong>{{ total }}</strong><span>{{ unidad }}</span></div></div>
+  {% else %}<div class="dashboard-chart operation-bars"><canvas id="{{ id }}" data-operation-chart="{{ tipo }}" data-chart-values='{{ filas|tojson }}' role="img" aria-label="{{ titulo }}. Valores disponibles en la tabla inferior."></canvas></div>{% endif %}
+  {% else %}<div class="dashboard-empty"><i class="fa fa-chart-pie" aria-hidden="true"></i>Sin registros para mostrar.</div>{% endif %}
+  {% if tipo == 'doughnut' %}<ul class="operation-chart-legend" aria-label="Valores del gráfico">{% for f in filas %}<li><span><i data-chart-label="{{ f.etiqueta }}" aria-hidden="true"></i>{{ f.etiqueta }}</span><b>{{ f.cantidad }}</b></li>{% endfor %}</ul>
+  {% else %}<details class="dashboard-data"><summary>Consultar cantidades</summary><div class="table-responsive"><table class="table mb-0"><caption class="visually-hidden">{{ titulo }}</caption><thead><tr><th scope="col">Categoría</th><th scope="col">Cantidad</th></tr></thead><tbody>{% for f in filas %}<tr><th scope="row">{{ f.etiqueta }}</th><td>{{ f.cantidad }}</td></tr>{% endfor %}</tbody></table></div></details>{% endif %}
+  <p class="dashboard-footnote">{{ nota }}</p>
+</section>
+{% endmacro %}

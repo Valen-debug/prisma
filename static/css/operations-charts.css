@@ -1,0 +1,33 @@
+.operations-chart-grid { display: grid; gap: 18px; margin-bottom: 28px; align-items: stretch; }
+.signals-chart-grid { grid-template-columns: minmax(240px, .9fr) minmax(0, 1.2fr) minmax(0, 1.2fr); }
+.commitments-chart-grid { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); }
+.operation-chart-card { display: flex; flex-direction: column; }
+.operation-chart-card .dashboard-card-heading { min-height: 65px; }
+.operation-chart-card .dashboard-card-heading h3 { font-size: 18px; }
+.operation-chart-card .dashboard-donut { flex: none; height: 180px; width: 180px; margin: 16px auto; }
+.operation-bars { height: 280px; flex: none; margin-top: 10px; }
+.operation-chart-card > .dashboard-footnote { margin-top: auto; padding-top: 14px; }
+.operation-chart-legend { list-style: none; margin: 10px 0 14px; padding: 0; }
+.operation-chart-legend li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 11px; border-bottom: 1px solid #edf1ee; }
+.operation-chart-legend li > span { display: flex; align-items: center; gap: 8px; color: var(--slate); }
+.operation-chart-legend b { font-weight: 500; color: var(--navy); }
+.operation-chart-legend i { width: 8px; height: 8px; border-radius: 3px; flex: none; background: #a5b0a9; }
+.operation-chart-legend [data-chart-label="Validada"], .operation-chart-legend [data-chart-label="Cumplido"] { background: #65ad91; }
+.operation-chart-legend [data-chart-label="Por validar"] { background: #c8a76a; }
+.operation-chart-legend [data-chart-label="En curso"] { background: #688cb8; }
+.operation-chart-legend [data-chart-label="Atrasado"] { background: #c27463; }
+@media (max-width: 1100px) {
+  .signals-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .signals-chart-grid > :first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 767.98px) {
+  .operations-chart-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .operation-bars { height: 270px; }
+  .operation-chart-card .dashboard-card-heading { min-height: 0; }
+}
+@media print {
+  .operations-chart-grid { display: block; }
+  .operation-chart-legend i { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+#signals-content.signals-content-first { padding-bottom: 20px; }

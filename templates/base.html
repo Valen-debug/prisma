@@ -7,29 +7,45 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+  {% block estilos %}{% endblock %}
   <meta name="csrf" content="{{ session.csrf }}">
 </head>
-<body>
+<body class="workspace-page">
+<div class="navigation-progress" aria-hidden="true"></div>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 {% set ep = request.endpoint %}
 {% set grupo = {'variable_nueva': 'analisis', 'variable_editar': 'analisis', 'variables': 'analisis', 'tablero': 'analisis', 'escenarios': 'analisis',
                  'informe': 'analisis', 'revision': 'analisis', 'contexto_territorio': 'analisis', 'escenario_proponer': 'analisis', 'municipio': 'territorio', 'asamblea': 'territorio'}.get(ep, ep) %}
 {% set analisis_menu = [('tablero','Tablero','fa-gauge-high','Alertas y brechas'), ('escenarios','Escenarios','fa-code-branch','¿Qué pasaría si…?'),
                         ('variables','Variables PESTEL','fa-sliders','Lectura técnica y fuentes'), ('informe','Informe','fa-file-lines','PDF, Excel y resumen con IA'),
                         ('contexto_territorio','Contexto','fa-mountain-sun','Cifras y fuentes')] %}
-<header class="top">
-  <div class="wrap">
-    <a class="brand" href="{{ url_for('inicio') }}">{{ marca() }}</a>
+<header class="top fundacolor-navbar" id="site-navbar">
+  <div class="wrap nav-shell">
+    <a class="brand" href="{{ url_for('inicio') }}" aria-label="{{ APP }} · Inicio">{{ marca() }}</a>
     <nav class="mainnav" aria-label="Principal">
       {% for e, t in [('inicio','Inicio'), ('territorio', T.mapa), ('voz', T.voz), ('decisiones','Compromisos')] %}
-      <a href="{{ url_for(e) }}" class="{{ 'on' if grupo == e }}">{{ t }}</a>
+      <a href="{{ url_for(e) }}" class="{{ 'on' if grupo == e }}" {{ 'aria-current=page' if grupo == e }}>{{ t }}</a>
       {% endfor %}
       <div class="dropdown d-flex">
-        <a href="#" class="{{ 'on' if grupo == 'analisis' }}" data-bs-toggle="dropdown" aria-expanded="false">Análisis <i class="fa fa-chevron-down ms-1" style="font-size:10px"></i></a>
-        <ul class="dropdown-menu menu-analisis">
-          {% for e, t, i, d in analisis_menu %}<li><a class="dropdown-item" href="{{ url_for(e) }}"><i class="fa {{ i }}"></i><span><b>{{ t }}</b><small>{{ d }}</small></span></a></li>{% endfor %}
-        </ul>
+        <button id="analysis-menu-toggle" type="button" aria-controls="analysis-menu" class="nav-analysis {{ 'on' if grupo == 'analisis' }}" data-bs-toggle="dropdown" aria-expanded="false">Análisis <i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+        <div class="dropdown-menu dropdown-menu-end menu-analisis" id="analysis-menu" aria-labelledby="analysis-menu-toggle">
+          <div class="analysis-menu-panel">
+            <div class="analysis-menu-label">Herramientas de análisis</div>
+            {% for e, t, i, d in analisis_menu %}
+            <a class="dropdown-item analysis-menu-item" href="{{ url_for(e) }}" {% if ep == e %}aria-current="page"{% endif %}>
+              <i class="fa {{ i }}" aria-hidden="true"></i>
+              <span><b>{{ t }}</b><small>{{ d }}</small></span>
+              <i class="fa fa-chevron-right analysis-item-arrow" aria-hidden="true"></i>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </nav>
+    <div class="nav-actions">
+    <a class="nav-report" href="{{ url_for('reportar') }}" target="_blank" rel="noopener"><i class="fa fa-plus" aria-hidden="true"></i>Reportar</a>
+    <button class="mobile-menu-toggle d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobile-navigation" aria-controls="mobile-navigation" aria-label="Abrir menú de navegación"><i class="fa fa-bars" aria-hidden="true"></i></button>
     <div class="who dropdown">
       <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menú de usuario">
         <span class="lh"><b>{{ session.nombre }}</b>{% if session.nombre != ROLES[session.rol] %}<span>{{ ROLES[session.rol] }}</span>{% endif %}</span>
@@ -51,8 +67,29 @@
         <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fa fa-right-from-bracket"></i>Cerrar sesión</a></li>
       </ul>
     </div>
+    </div>
   </div>
 </header>
+<nav class="offcanvas offcanvas-top mobile-navigation" id="mobile-navigation" tabindex="-1" aria-labelledby="mobile-navigation-title">
+  <div class="mobile-nav-header">
+    <a class="brand" href="{{ url_for('inicio') }}" aria-label="{{ APP }} · Inicio">{{ logo() }}<span>{{ APP }}</span></a>
+    <button type="button" class="mobile-nav-close" data-bs-dismiss="offcanvas" aria-label="Cerrar menú"><i class="fa fa-xmark" aria-hidden="true"></i></button>
+  </div>
+  <div class="offcanvas-body">
+    <h2 id="mobile-navigation-title">Tu espacio de trabajo</h2>
+    <div class="mobile-primary-links">
+      {% for e, t in [('inicio','Inicio'), ('territorio', T.mapa), ('voz', T.voz), ('decisiones','Compromisos')] %}
+      <a href="{{ url_for(e) }}" {% if grupo == e %}aria-current="page"{% endif %}>{{ t }}<i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+      {% endfor %}
+    </div>
+    <h3>Análisis y estrategia</h3>
+    <div class="mobile-analysis-links">
+      {% for e, t, i, d in analisis_menu %}<a href="{{ url_for(e) }}" {% if ep == e %}aria-current="page"{% endif %}><i class="fa {{ i }}" aria-hidden="true"></i>{{ t }}</a>{% endfor %}
+    </div>
+    <a class="nav-report mobile-report" href="{{ url_for('reportar') }}" target="_blank" rel="noopener"><i class="fa fa-plus" aria-hidden="true"></i>Reportar una señal</a>
+  </div>
+</nav>
+<div class="workspace-context"><div class="wrap"><span><i class="fa fa-layer-group" aria-hidden="true"></i> Gestión estratégica del entorno</span><span class="context-environment">Entorno de demostración</span></div></div>
 
 {% if escenarios %}
 <div class="scenario-strip"><div class="wrap">
@@ -62,7 +99,7 @@
 </div></div>
 {% endif %}
 
-<main class="wrap">
+<main class="wrap" id="contenido">
   {% with mensajes = get_flashed_messages(with_categories=true) %}{% if mensajes %}
   <div class="flashes">{% for cat, msg in mensajes %}
     <div class="alert alert-{{ cat }} alert-dismissible fade show mb-0" role="alert">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button></div>
@@ -79,6 +116,7 @@
 
   {% block contenido %}{% endblock %}
 </main>
+<footer class="workspace-footer wrap"><span>{{ APP }} <span aria-hidden="true">·</span> {{ LEMA }}</span><span>Análisis, participación y seguimiento</span></footer>
 
 <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.js') }}"></script>
@@ -88,6 +126,7 @@
   document.querySelectorAll('form[method="post" i]').forEach(function (f) {
     const c = document.createElement('input'); c.type = 'hidden'; c.name = 'csrf'; c.value = CSRF; f.appendChild(c);
   });
+  Chart.defaults.animation.duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450;
   Chart.defaults.font.family = 'Plex, system-ui, sans-serif';
   Chart.defaults.color = '#5E6B63';
   // Los avisos de confirmación se cierran solos a los 4 s (si el mouse no está encima).
@@ -109,6 +148,7 @@
     } catch (e) {}
   })();
 </script>
+<script src="{{ url_for('static', filename='js/interface.js') }}" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

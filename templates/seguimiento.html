@@ -9,15 +9,22 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
 </head>
-<body style="background:var(--mist)">
-<header class="seg-top"><div style="max-width:720px;margin:0 auto">
+<body class="public-page tracking-page">
+<header class="seg-top"><div class="public-header-inner">
   <div class="brand">{{ marca(true) }}</div>
-  <h1>Lo que se está haciendo con sus reportes</h1>
+  <span class="public-kicker">SEGUIMIENTO PÚBLICO</span>
+  <h1>De los reportes a los compromisos</h1>
   <p>{{ total }} señales ya fueron revisadas. Estos son los compromisos que salieron de ellas.</p>
 </div></header>
 <main class="seg">
-  <section class="panel mb-3"><h2>Compromisos</h2>
+  <section class="public-metrics" aria-label="Resumen del seguimiento">
+    <div><span>Señales revisadas</span><strong>{{ total }}</strong></div>
+    <div><span>Compromisos publicados</span><strong>{{ compromisos|length }}</strong></div>
+    <div><span>Temas destacados</span><strong>{{ temas|length }}</strong></div>
+  </section>
+  <section class="panel mb-3"><h2>Compromisos publicados <small>{{ compromisos|length }} registros</small></h2>
     {% for c in compromisos %}
     <div class="row-item"><span class="ic-lg"><i class="fa {{ c.icono }}"></i></span>
       <div><div class="t">{{ c.decision }}</div>
@@ -25,8 +32,8 @@
       <span class="avance {{ c.avance.split()[0] }}">{{ c.avance }}</span></div>
     {% else %}<div class="empty">Todavía no hay compromisos publicados.</div>{% endfor %}
   </section>
-  <section class="panel mb-3"><h2>De qué nos están hablando</h2><div class="body">
-    {% for t in temas %}<div class="d-flex align-items-center gap-2 mb-2"><i class="fa {{ t.icono }}" style="width:20px;color:#8A5A10"></i><span class="flex-fill">{{ t.tema }}</span><b>{{ t.n }}</b></div>{% endfor %}
+  <section class="panel mb-3"><h2>Temas que requieren atención</h2><div class="body">
+    {% for t in temas %}<div class="d-flex align-items-center gap-2 mb-2"><i class="fa {{ t.icono }}" style="width:20px;color:#8A5A10"></i><span class="flex-fill">{{ t.tema }}</span><b>{{ t.n }}</b></div>{% else %}<p class="text-muted mb-0">Aún no hay temas publicados.</p>{% endfor %}
     <p class="small text-muted mb-0 mt-2">Por seguridad no publicamos lo que escribió cada persona ni desde dónde.</p>
   </div></section>
   <div class="d-grid"><a class="btn btn-ochre btn-lg" href="{{ url_for('reportar') }}"><i class="fa fa-bullhorn"></i>Reportar una señal</a></div>

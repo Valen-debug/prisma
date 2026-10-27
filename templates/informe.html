@@ -9,26 +9,32 @@
 </div>
 {% endblock %}
 {% block contenido %}
-<div class="page">
-<article class="reporte">
+<div class="page analysis-workspace">
+<section class="module-summary d-print-none"><div><span class="section-kicker">DOCUMENTACIÓN EJECUTIVA</span><h2>Una visión consolidada del entorno</h2><p>Consulte los hallazgos, compromisos y fuentes. Exporte el documento para compartirlo con su equipo.</p></div></section>
+<article class="reporte executive-report">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+<<<<<<< Updated upstream
     <div><div class="meta">{{ APP }}, informe de lectura de entorno</div><h2>{{ T.sector }}</h2>
       <div class="meta">{{ municipios|length }} {{ T.unidades }} · {{ total_senales }} señales de campo validadas · datos de demostración</div></div>
+=======
+    <div><div class="meta">{{ APP }} · INFORME EJECUTIVO DE ENTORNO</div><h2>{{ T.sector }}</h2>
+      <div class="meta">{{ municipios|length }} {{ T.unidades }} · {{ total_senales }} señales validadas · datos de demostración</div></div>
+>>>>>>> Stashed changes
     <div class="meta text-end">{{ hoy }}<br>Elaborado por {{ session.nombre }}</div>
   </div>
   {% if escenarios %}<p class="mt-3 mb-0 p-3 rounded-3" style="background:var(--sky-soft)"><i class="fa fa-bolt me-1" style="color:var(--sky-ink)"></i>Escenario simulado: <strong>{{ escenarios|join(' + ') }}</strong>.</p>{% endif %}
 
   {% if boletin %}
   <div class="boletin mt-4 p-3 rounded-3" style="background:var(--mist)">
-    <div class="meta mb-1"><i class="fa fa-wand-magic-sparkles me-1"></i>Resumen ejecutivo {{ '(redactado por IA y revisado por el equipo)' if boletin._motor == 'ia' else '(modo básico)' }}</div>
+    <div class="meta mb-1"><i class="fa fa-wand-magic-sparkles me-1"></i>Resumen ejecutivo {{ '(borrador generado por IA; requiere revisión del equipo)' if boletin._motor == 'ia' else '(modo básico)' }}</div>
     <h3>{{ boletin.titular }}</h3><p>{{ boletin.que_pasa }}</p><p class="mb-0">{{ boletin.brecha }}</p>
   </div>{% endif %}
 
   <h3>1. Estado de cada factor PESTEL</h3>
-  <table class="table"><thead><tr><th>Factor</th><th>Técnica</th><th>{{ T.Gente }}</th><th>Nivel</th><th>Señales</th></tr></thead><tbody>
+  <div class="table-responsive"><table class="table"><thead><tr><th>Factor</th><th>Técnica</th><th>{{ T.Gente }}</th><th>Nivel</th><th>Señales</th></tr></thead><tbody>
   {% for f in factores %}{% set t = tecnica[loop.index0] %}{% set c = comunidad[loop.index0] %}
   <tr><td class="fw-medium">{{ f.nombre }}</td><td>{{ t.indice|dec }}</td><td>{{ c.indice|dec }}</td><td class="c-{{ f.clase }}"><span class="pill">{{ f.nivel }}</span></td><td>{{ f.senales }}</td></tr>{% endfor %}
-  </tbody></table>
+  </tbody></table></div>
 
   <h3>2. Cinco riesgos prioritarios</h3>
   <ol class="ps-3">{% for v in riesgos %}<li><strong class="fw-semibold">{{ v.nombre }}</strong>, nivel {{ v.efectivo }} ({{ v.nivel|lower }}){% if v.origen == 'Comunidad' %}, elevado por {{ T.gente }}{% endif %}. <span class="muted">{{ v.decision }} Actor: {{ v.responsable }}.</span></li>{% endfor %}</ol>
@@ -42,14 +48,14 @@
   {% if emergentes %}<p class="mt-3 mb-0"><b>Temas emergentes</b> (aún no son variables): {% for g in emergentes %}{{ g.tema }} ({{ g.senales|length }} reportes en {{ g.municipios|join(', ') }}){{ '; ' if not loop.last else '.' }}{% endfor %}</p>{% endif %}
 
   <h3>4. {{ T.Unidades }}</h3>
-  <table class="table"><thead><tr><th>{{ T.Unidad }}</th><th>{{ T.tipo_unidad }}</th><th>Señales</th><th>Lo que más preocupa</th><th>Nivel</th></tr></thead><tbody>
+  <div class="table-responsive"><table class="table"><thead><tr><th>{{ T.Unidad }}</th><th>{{ T.tipo_unidad }}</th><th>Señales</th><th>Lo que más preocupa</th><th>Nivel</th></tr></thead><tbody>
   {% for m in municipios|sort(attribute='senales', reverse=true) %}<tr><td class="fw-medium">{{ m.nombre }}{% if m.pdet %} <span class="muted">({{ T.marca }})</span>{% endif %}<div class="meta">{{ m.departamento }}</div></td><td>{{ m.cultivo }}</td><td>{{ m.senales }}</td><td>{{ m.principal or '–' }}</td><td class="c-{{ m.clase }}"><span class="pill">{{ m.nivel }}</span></td></tr>{% endfor %}
-  </tbody></table>
+  </tbody></table></div>
 
   <h3>5. Decisiones y compromisos</h3>
-  <table class="table"><thead><tr><th>Decisión</th><th>Actores</th><th>Estado</th><th>Avance</th></tr></thead><tbody>
+  <div class="table-responsive"><table class="table"><thead><tr><th>Decisión</th><th>Actores</th><th>Estado</th><th>Avance</th></tr></thead><tbody>
   {% for v in sugeridas %}{% set e = estados.get(v.id, {}) %}<tr><td>{{ v.decision }}</td><td>{{ e.get('actores') or v.responsable }}</td><td class="text-nowrap">{{ e.get('estado', 'Pendiente') }}</td><td class="text-nowrap">{{ e.get('avance') if e.get('estado') == 'Aprobada' else '–' }}</td></tr>{% endfor %}
-  </tbody></table>
+  </tbody></table></div>
 
   <p class="meta mt-4 mb-0">Método: análisis PESTEL. Lectura técnica = probabilidad × impacto. {{ T.lectura_gente }} = gravedad promedio × número de reportes validados en 60 días. El nivel usa la más alta. Los reportes de seguridad son anónimos y su texto no se incluye en este informe. Prototipo académico con datos de demostración.</p>
 </article>

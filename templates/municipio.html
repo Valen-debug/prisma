@@ -15,7 +15,15 @@
 {% endblock %}
 {% block contenido %}
 <div class="page">
-  <p class="intro">{{ m.nota }} La lectura técnica es la misma para toda la organización; la {{ T.lectura_gente|lower }} sale de las señales validadas de {{ m.nombre }}.</p>
+  <section class="module-summary">
+    <div><span class="section-kicker">FICHA DE SEGUIMIENTO</span><h2>Lectura del entorno local</h2>
+      <p>{{ m.nota }} Compare la lectura técnica de la organización con las señales validadas de {{ m.nombre }}.</p></div>
+  </section>
+  <section class="workspace-metrics" aria-label="Resumen local">
+    <div class="metric-card"><span>Señales registradas</span><strong>{{ senales|length }}</strong></div>
+    <div class="metric-card"><span>Variables con señales validadas</span><strong>{{ con_senal|length }}</strong></div>
+    <div class="metric-card"><span>Factores de análisis</span><strong>{{ tecnica|length }}</strong></div>
+  </section>
   <div class="legend mb-2"><span><i class="sw"></i>Lectura técnica regional</span><span><i class="sw com"></i>{{ T.lectura_gente }} en {{ m.nombre }}</span></div>
   <section class="compare mb-4">
     {% for t in tecnica %}{% set c = comunidad[loop.index0] %}

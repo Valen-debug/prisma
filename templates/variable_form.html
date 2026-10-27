@@ -7,7 +7,8 @@
 <div class="head"><h1>{{ 'Editar variable' if editar else 'Registrar variable' }}</h1></div>
 {% endblock %}
 {% block contenido %}
-<div class="page">
+<div class="page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">GESTIÓN DE VARIABLES</span><h2>{{ 'Actualice la información de la variable' if editar else 'Incorpore una nueva variable al análisis' }}</h2><p>Documente su alcance, la evidencia disponible y los criterios de calificación.</p></div></section>
   {% if solo_fuente %}<p class="intro">Como administrador de TI puede cambiar la fuente, su confiabilidad y cada cuánto se actualiza. El resto lo califica el analista.</p>{% endif %}
   {% if v and v.emergente %}
   <div class="ai-note mb-4"><i class="fa fa-wand-magic-sparkles"></i><div><b>{{ 'Propuesta de la IA' if v.motor == 'ia' else 'Propuesta inicial' }} a partir del tema emergente «{{ v.emergente }}».</b>
@@ -17,7 +18,7 @@
   {% if v and v.emergente %}<input type="hidden" name="emergente" value="{{ v.emergente }}">{% endif %}
   <div class="row g-4">
     <div class="col-lg-8">
-      <section class="panel"><h2>La variable</h2><div class="body row g-3">
+      <section class="panel"><h2>Identificación y alcance</h2><div class="body row g-3">
         <div class="col-md-4"><label class="form-label" for="factor">Factor PESTEL</label>
           <select class="form-select" id="factor" name="factor" {{ 'disabled' if solo_fuente }}>{% for k, n in FACTORES %}<option value="{{ k }}" {{ 'selected' if v and v.factor == k }}>{{ n }}</option>{% endfor %}</select></div>
         <div class="col-md-8"><label class="form-label" for="nombre">Nombre</label>
@@ -49,7 +50,7 @@
       </div></section>
     </div>
     <div class="col-lg-4">
-      <section class="panel"><h2>Calificación</h2><div class="body">
+      <section class="panel"><h2>Evaluación del riesgo o la oportunidad</h2><div class="body">
         <label class="form-label" for="probabilidad">Probabilidad <span class="form-hint">de 1 (rara) a 5 (casi segura)</span></label>
         <select class="form-select mb-3" id="probabilidad" name="probabilidad" {{ 'disabled' if solo_fuente }}>{% for n in range(1,6) %}<option {{ 'selected' if (v and v.probabilidad == n) or (not v and n == 3) }}>{{ n }}</option>{% endfor %}</select>
         <label class="form-label" for="impacto">Impacto <span class="form-hint">de 1 (leve) a 5 (grave)</span></label>

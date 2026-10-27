@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
 {% block titulo %}Tablero{% endblock %}
 {% block h1 %}Tablero del entorno{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
 {% block cabecera %}
 {% if session.rol in ('directivo', 'analista') %}
-<div class="actions"><a class="btn btn-quiet btn-sm" href="{{ url_for('revision') }}"><i class="fa fa-scale-unbalanced"></i>¿Dónde podemos estar equivocados?</a></div>
+<div class="actions"><a class="btn btn-quiet btn-sm" href="{{ url_for('revision') }}"><i class="fa fa-scale-unbalanced"></i>Revisión crítica</a></div>
 {% endif %}
 <div class="tabs nav" role="tablist">
   <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-resumen" type="button" role="tab">Resumen</button>
@@ -21,8 +25,13 @@
 {%- endmacro %}
 
 {% block contenido %}
-<div class="tab-content page">
+<div class="tab-content page analysis-workspace dashboard-workspace">
+  <div class="dashboard-intro">
+    <div><span class="section-kicker">INTELIGENCIA DEL ENTORNO</span><h2>Una visión clara para decidir a tiempo</h2><p>Riesgos, señales y compromisos de {{ T.sector|lower }}.</p></div>
+    <div class="dashboard-date"><i class="fa fa-calendar-day" aria-hidden="true"></i><span>Datos consultados<strong>{{ actividad.actualizado }}</strong></span></div>
+  </div>
   <div class="tab-pane fade show active" id="t-resumen" role="tabpanel">
+<<<<<<< Updated upstream
     <section class="kpis">
       <div class="kpi"><b>{{ kpi.criticos }}</b><span>Riesgos críticos</span></div>
       <div class="kpi"><b>{{ kpi.altos }}</b><span>Riesgos altos</span></div>
@@ -40,6 +49,58 @@
       </section></div>
     </div>
     <p class="note">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad promedio de las señales validadas × cuántas personas lo reportan (últimos 60 días). El nivel usa la más alta de las dos: así una alerta de campo no se pierde.</p>
+=======
+    <section class="workspace-metrics dashboard-metrics" aria-label="Indicadores generales">
+      <a class="metric-card dashboard-metric metric-risk" href="#t-alertas" data-dashboard-tab="#t-alertas"><span><i class="fa fa-triangle-exclamation" aria-hidden="true"></i>Riesgos críticos</span><strong>{{ kpi.criticos }}<small>/ {{ riesgos|length }} riesgos evaluados</small></strong><small>{{ kpi.altos }} adicionales en nivel alto · escala 1–25</small></a>
+      <a class="metric-card dashboard-metric metric-signals" href="{{ url_for('voz') }}"><span><i class="fa fa-comments" aria-hidden="true"></i>Señales validadas</span><strong>{{ actividad.validadas }}<small>últimos 60 días</small></strong><small>{{ actividad.vinculadas }} vinculadas · {{ actividad.sin_variable }} sin variable asignada</small></a>
+      <a class="metric-card dashboard-metric metric-pending" href="{{ url_for('voz') }}"><span><i class="fa fa-hourglass-half" aria-hidden="true"></i>Señales pendientes</span><strong>{{ actividad.pendientes }}<small>por validar</small></strong><small>Todos los reportes pendientes de revisión</small></a>
+      <a class="metric-card dashboard-metric metric-commitments" href="{{ url_for('decisiones') }}#t-compromisos"><span><i class="fa fa-handshake" aria-hidden="true"></i>Compromisos aprobados</span><strong>{{ actividad.total_compromisos }}<small>con seguimiento</small></strong><small>{{ kpi.pendientes }} decisiones pendientes o en análisis</small></a>
+    </section>
+    <div class="dashboard-grid">
+      <section class="dashboard-card dash-comparison" aria-labelledby="comparison-title">
+        <div class="dashboard-card-heading"><div><span class="dashboard-card-kicker">EXPOSICIÓN POR FACTOR</span><h3 id="comparison-title">Dos lecturas, una perspectiva</h3></div><span class="dashboard-scale">1–25</span></div>
+        <p class="dashboard-card-description">Lectura técnica frente a {{ T.lectura_gente|lower }}. Promedio de riesgos por factor.</p>
+        <div class="dashboard-chart"><canvas id="factorsChart" role="img" aria-label="Comparación de lectura técnica y de grupos de interés por factor PESTEL, escala 1 a 25"></canvas></div>
+        <details class="dashboard-data"><summary>Consultar valores y cobertura</summary><div class="table-responsive"><table class="table mb-0"><caption class="visually-hidden">Lecturas PESTEL y número de riesgos con reportes</caption><thead><tr><th scope="col">Factor</th><th scope="col">Técnica</th><th scope="col">{{ T.Gente }}</th><th scope="col">Riesgos con reportes</th></tr></thead><tbody>
+        {% for f in factores %}<tr><th scope="row">{{ f.nombre }}</th><td>{{ tecnica[loop.index0].indice|dec }}</td><td>{{ comunidad[loop.index0].indice|dec }}</td><td>{{ riesgos|selectattr('factor','equalto',f.clave)|selectattr('com_n')|list|length }} / {{ riesgos|selectattr('factor','equalto',f.clave)|list|length }}</td></tr>{% endfor %}
+        </tbody></table></div></details>
+        <p class="dashboard-footnote">Las lecturas pueden tener distinta cobertura. «Sin datos» indica ausencia de reportes; no equivale a riesgo cero.</p>
+      </section>
+      <section class="dashboard-card dash-map" aria-labelledby="coverage-title">
+        <div class="dashboard-card-heading"><div><span class="dashboard-card-kicker">COBERTURA TERRITORIAL</span><h3 id="coverage-title">El entorno en cada lugar</h3></div><span class="dashboard-count">{{ lugares|length }} {{ T.unidades }}</span></div>
+        <p class="dashboard-card-description">Mayor puntaje de riesgo reportado por lugar. Señales validadas en los últimos 60 días.</p>
+        {% if lugares %}<div id="dashboardMap" role="region" aria-label="Mapa de ubicaciones de la organización en Colombia"></div>
+        <p id="dashboard-map-status" class="dashboard-footnote" role="status"></p>
+        <div class="dashboard-map-legend" aria-label="Leyenda del mapa"><span><i style="--legend-color:var(--critico)"></i>Crítico</span><span><i style="--legend-color:var(--alto)"></i>Alto</span><span><i style="--legend-color:var(--medio)"></i>Medio</span><span><i style="--legend-color:var(--bajo)"></i>Bajo</span><span><i style="--legend-color:var(--faint)"></i>Sin datos</span></div>
+        <div class="dashboard-location-list">{% for m in lugares %}<a href="{{ m.url }}"><span class="location-marker c-{{ m.clase }}" aria-hidden="true"></span><span><b>{{ m.nombre }}</b><small>{{ m.senales }} señales validadas · {{ m.nivel }}</small></span><span class="score c-{{ m.clase }}">{{ m.puntaje if m.puntaje is not none else '–' }}</span></a>{% endfor %}</div>
+        {% else %}<div class="dashboard-empty">Aún no hay ubicaciones registradas.</div>{% endif %}
+        <a class="dashboard-card-link" href="{{ url_for('territorio') }}">Explorar mapa y fichas<i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+      </section>
+      <section class="dashboard-card dash-risks" aria-labelledby="risks-title">
+        <div class="dashboard-card-heading"><div><span class="dashboard-card-kicker">PRIORIDADES DE ATENCIÓN</span><h3 id="risks-title">Cinco riesgos de mayor nivel</h3></div><span class="dashboard-scale">1–25</span></div>
+        <p class="dashboard-card-description">Puntaje efectivo: el mayor entre la lectura técnica y la de grupos de interés.{% if escenarios %} Incluye el escenario simulado.{% endif %}</p>
+        {% if riesgos %}<div class="dashboard-chart risk-chart"><canvas id="risksChart" role="img" aria-label="Cinco riesgos con mayor puntaje efectivo, escala 1 a 25"></canvas></div>
+        <details class="dashboard-data"><summary>Consultar riesgos y acciones sugeridas</summary>{% for v in riesgos[:5] %}<div class="dashboard-risk-detail"><span class="score c-{{ v.clase }}">{{ v.efectivo }}</span><div><b>{{ v.nombre }}</b><p>{{ v.nivel }} · {{ v.decision }}</p></div></div>{% endfor %}</details>
+        {% else %}<div class="dashboard-empty">Aún no hay riesgos evaluados.</div>{% endif %}
+        <a class="dashboard-card-link" href="#t-alertas" data-dashboard-tab="#t-alertas">Consultar alertas<i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+      </section>
+      <section class="dashboard-card dash-activity" aria-labelledby="activity-title">
+        <div class="dashboard-card-heading"><div><span class="dashboard-card-kicker">ESCUCHA Y PARTICIPACIÓN</span><h3 id="activity-title">Reportes recibidos por semana</h3></div><span class="dashboard-count">8 semanas</span></div>
+        <div class="dashboard-inline-stat"><strong>{{ actividad.recibidas }}</strong><span>reportes recibidos<br><small>según su estado actual</small></span></div>
+        <div class="dashboard-chart activity-chart"><canvas id="activityChart" role="img" aria-label="Cantidad de reportes recibidos durante las últimas ocho semanas, por estado actual"></canvas></div>
+        <details class="dashboard-data"><summary>Consultar cantidades por semana</summary><div class="table-responsive"><table class="table mb-0"><thead><tr><th scope="col">Recepción</th><th scope="col">Validados</th><th scope="col">Pendientes</th><th scope="col">Descartados</th><th scope="col">Otros</th></tr></thead><tbody>{% for s in actividad.semanas %}<tr><th scope="row">{{ s.etiqueta }}</th><td>{{ s.validadas }}</td><td>{{ s.pendientes }}</td><td>{{ s.descartadas }}</td><td>{{ s.otros }}</td></tr>{% endfor %}</tbody></table></div></details>
+        <p class="dashboard-footnote">La última semana está en curso. Se usa la fecha de recepción, no la fecha de validación. Más reportes no implica más riesgo.</p>
+      </section>
+      <section class="dashboard-card dash-commitments" aria-labelledby="commitments-title">
+        <div class="dashboard-card-heading"><div><span class="dashboard-card-kicker">GESTIÓN DE RESPUESTAS</span><h3 id="commitments-title">Estado de los compromisos</h3></div></div>
+        <p class="dashboard-card-description">Avance registrado de las decisiones aprobadas.</p>
+        {% if actividad.total_compromisos %}<div class="dashboard-donut"><canvas id="commitmentsChart" role="img" aria-label="Compromisos aprobados por estado de avance"></canvas><div class="dashboard-donut-total"><strong>{{ actividad.total_compromisos }}</strong><span>compromisos</span></div></div>{% else %}<div class="dashboard-empty"><i class="fa fa-handshake" aria-hidden="true"></i>Aún no hay compromisos aprobados.</div>{% endif %}
+        <ul class="dashboard-status-list" aria-label="Cantidad por estado">{% for c in actividad.compromisos %}<li><span><i class="commitment-dot" data-status="{{ c.estado }}" aria-hidden="true"></i>{{ c.estado }}</span><b>{{ c.cantidad }}</b></li>{% endfor %}</ul>
+        <a class="dashboard-card-link" href="{{ url_for('decisiones') }}#t-compromisos">Revisar responsables y fechas<i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+      </section>
+    </div>
+    <div class="dashboard-method"><i class="fa fa-circle-info" aria-hidden="true"></i><p><b>Cómo leer este tablero.</b> Técnica = probabilidad × impacto. Grupos de interés = gravedad promedio × presión de repetición, con reportes validados de los últimos 60 días ({{ actividad.desde }}–{{ actividad.hasta }}). Los puntajes no son porcentajes. Los temas sin variable asignada cuentan como señales, pero aún no modifican el riesgo PESTEL. Datos de demostración.</p></div>
+>>>>>>> Stashed changes
   </div>
 
   <div class="tab-pane fade" id="t-alertas" role="tabpanel">
@@ -68,17 +129,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-const tecnica = {{ tecnica|tojson }}, comunidad = {{ comunidad|tojson }};
-const NAVY = '#143D34', OCRE = '#D8962F';
-new Chart(document.getElementById('radarChart'), {
-  type: 'radar',
-  data: {labels: tecnica.map(f => f.nombre), datasets: [
-    {label: 'Lectura técnica', data: tecnica.map(f => f.indice), borderColor: NAVY, backgroundColor: 'rgba(20,61,52,.08)', pointBackgroundColor: NAVY, pointRadius: 3, borderWidth: 1.5},
-    {label: {{ T.lectura_gente|tojson }}, data: comunidad.map(f => f.indice), borderColor: OCRE, backgroundColor: 'rgba(216,150,47,.22)', pointBackgroundColor: OCRE, pointRadius: 3, borderWidth: 2, spanGaps: true}]},
-  options: {plugins: {legend: {position: 'bottom'}},
-    scales: {r: {min: 0, max: 25, ticks: {stepSize: 5, backdropColor: 'transparent', font: {size: 10}}, grid: {color: '#E2E6DF'}, angleLines: {color: '#E2E6DF'}, pointLabels: {font: {size: 12, weight: '500'}, color: '#16231D'}}}}
-});
-if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }
-</script>
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script id="dashboard-data" type="application/json">{{ {'tecnica': tecnica, 'comunidad': comunidad, 'riesgos': riesgos[:5], 'actividad': actividad, 'lugares': lugares, 'lectura_gente': T.lectura_gente}|tojson }}</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 {% endblock %}

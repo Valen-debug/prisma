@@ -1,6 +1,6 @@
 // Prisma Territorial · service worker: permite abrir el formulario comunitario sin señal.
-const CACHE = 'prisma-reportar-v2';
-const ARCHIVOS = ['/reportar', '/static/css/styles.css', '/static/vendor/bootstrap/bootstrap.min.css',
+const CACHE = 'prisma-reportar-v3';
+const ARCHIVOS = ['/reportar', '/static/css/styles.css', '/static/css/public.css', '/static/vendor/bootstrap/bootstrap.min.css',
   '/static/vendor/fontawesome/css/all.min.css', '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
   '/static/fonts/ibm-plex-sans-latin-400-normal.woff2', '/static/fonts/ibm-plex-sans-latin-500-normal.woff2',
   '/static/fonts/ibm-plex-sans-latin-600-normal.woff2', '/static/fonts/ibm-plex-sans-latin-300-normal.woff2'];

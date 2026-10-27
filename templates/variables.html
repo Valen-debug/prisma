@@ -11,7 +11,8 @@
 </div>
 {% endblock %}
 {% block contenido %}
-<div class="page">
+<div class="page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">BASE DE ANÁLISIS</span><h2>Registro y evaluación de variables</h2><p>Calificaciones, tendencias y fuentes para una lectura trazable del entorno.</p></div><div class="summary-meta"><strong>{{ variables|length }}</strong><span>de {{ total }} variables en esta vista</span></div></section>
   <p class="intro">
   {% if session.rol == 'directivo' %}Consulte cómo está calificada cada variable, qué se reporta en campo y de dónde sale la información. Las calificaciones las registra {{ ROLES.analista|lower }}.
   {% elif session.rol == 'ti' %}Puede editar la fuente de cada variable, su confiabilidad y cada cuánto se actualiza.
@@ -19,8 +20,8 @@
   {% if escenarios %} Las cifras con <i class="fa fa-bolt"></i> están cambiadas por el escenario que está simulando.{% endif %}
   </p>
   <section class="panel"><div class="table-responsive">
-  <table class="table table-hover">
-    <thead><tr><th>Variable</th><th>Tipo</th><th class="text-center">P × I</th><th class="text-center">Técnica</th><th class="text-center">{{ T.Gente }}</th><th class="text-center">Brecha</th><th>Tendencia</th><th>Fuente</th>{% if session.rol in ('analista','ti') %}<th></th>{% endif %}</tr></thead>
+  <table class="table table-hover" aria-label="Variables PESTEL y sus calificaciones">
+    <thead><tr><th>Variable</th><th>Tipo</th><th class="text-center">P × I</th><th class="text-center">Técnica</th><th class="text-center">{{ T.Gente }}</th><th class="text-center">Brecha</th><th>Tendencia</th><th>Fuente</th>{% if session.rol in ('analista','ti') %}<th><span class="visually-hidden">Acciones</span></th>{% endif %}</tr></thead>
     <tbody>
     {% for v in variables %}
     <tr>

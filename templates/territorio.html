@@ -5,8 +5,17 @@
 <div class="actions"><a class="btn btn-quiet btn-sm" href="{{ url_for('voz') }}#invitar"><i class="fa fa-qrcode"></i>Invitar a reportar</a></div>
 {% endblock %}
 {% block contenido %}
-<div class="page">
-  <p class="intro">Cada punto es un lugar de demostración. El color muestra el riesgo más alto que se reporta allí en los últimos 60 días. Haga clic para ver su ficha.</p>
+<div class="page operations-workspace">
+  <section class="module-summary">
+    <div><span class="section-kicker">COBERTURA Y SEGUIMIENTO</span><h2>Panorama por {{ T.lugar }}</h2>
+      <p>Cada punto corresponde a un lugar de demostración. Consulte el riesgo reportado en los últimos 60 días y abra su ficha para revisar el detalle.</p></div>
+    <a class="btn btn-quiet btn-sm" href="{{ url_for('voz') }}">Consultar señales <i class="fa fa-arrow-right" aria-hidden="true"></i></a>
+  </section>
+  <section class="workspace-metrics" aria-label="Resumen de cobertura">
+    <div class="metric-card"><span>{{ T.unidades|capitalize }} en seguimiento</span><strong>{{ lista|length }}</strong></div>
+    <div class="metric-card"><span>Señales registradas</span><strong>{{ lista|sum(attribute='senales') }}</strong></div>
+    <div class="metric-card"><span>Ventana de observación</span><strong>60 <small>días</small></strong></div>
+  </section>
   <div class="row g-4">
     <div class="col-lg-8"><div id="mapa" role="region" aria-label="Mapa de {{ T.unidades }}"></div>
       <div class="legend mt-2">
@@ -15,7 +24,8 @@
         <span><i class="sw" style="background:var(--faint)"></i>Sin señales</span></div>
     </div>
     <div class="col-lg-4">
-      <section class="muni-list">
+      <section class="muni-list" aria-label="Listado de {{ T.unidades }}">
+        <h2 class="h6 px-3 pt-3 pb-2 mb-0">{{ T.unidades|capitalize }} en seguimiento</h2>
         {% for m in lista %}
         <a class="muni c-{{ m.clase }}" href="{{ url_for('municipio', mid=m.id) }}">
           <span class="dot"></span>

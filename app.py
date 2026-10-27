@@ -240,6 +240,7 @@ def inicio():
     riesgos = sorted([v for v in variables if v["tipo"] == "R"], key=lambda v: -v["efectivo"])
     estados = {r["variable_id"]: r["estado"] for r in con.execute("SELECT * FROM decisiones").fetchall()}
     sugeridas = analisis.decisiones_sugeridas(variables)
+    actividad = analisis.actividad_tablero(con)
     resumen = {
         "criticos": len([v for v in riesgos if v["nivel"] == "Crítico"]),
         "altos": len([v for v in riesgos if v["nivel"] == "Alto"]),
@@ -247,7 +248,9 @@ def inicio():
         "variables": len(variables),
         "escenarios": con.execute("SELECT COUNT(*) FROM escenarios").fetchone()[0],
         "por_validar": con.execute("SELECT COUNT(*) FROM senales WHERE estado = 'Por validar'").fetchone()[0],
-        "senales": sum(v["com_n"] for v in variables),
+        "senales": actividad["validadas"],
+        "senales_vinculadas": actividad["vinculadas"],
+        "senales_sin_variable": actividad["sin_variable"],
         "municipios": con.execute("SELECT COUNT(*) FROM municipios").fetchone()[0],
         "compromisos": con.execute("SELECT COUNT(*) FROM decisiones WHERE estado = 'Aprobada'").fetchone()[0],
         "top": [v["nombre"] for v in riesgos[:2]],
@@ -279,12 +282,21 @@ def tablero():
         "criticos": len([v for v in riesgos if v["nivel"] == "Crítico"]),
         "altos": len([v for v in riesgos if v["nivel"] == "Alto"]),
         "oportunidades": len(oportunidades),
-        "pendientes": len([v for v in sugeridas if estados.get(v["id"], "Pendiente") == "Pendiente"]),
+        "pendientes": len([v for v in sugeridas if estados.get(v["id"], "Pendiente") in ("Pendiente", "En análisis")]),
     }
     mas, menos = analisis.brechas(variables)
+    actividad = analisis.actividad_tablero(con)
+    lugares = []
+    for m in municipios(con):
+        resumen, _ = resumen_municipio(con, m)
+        lugares.append({"id": m["id"], "nombre": m["nombre"], "ubicacion": m["departamento"],
+                        "lat": m["lat"], "lon": m["lon"], "nivel": resumen["nivel"],
+                        "clase": resumen["clase"], "puntaje": resumen["maximo"],
+                        "senales": actividad["por_lugar"].get(m["id"], 0),
+                        "url": url_for("municipio", mid=m["id"])})
     con.close()
     return render_template("tablero.html", factores=factores, tecnica=tecnica, comunidad=comunidad, riesgos=riesgos,
-                           oportunidades=oportunidades, kpi=kpi, escenarios=nombres,
+                           oportunidades=oportunidades, kpi=kpi, escenarios=nombres, actividad=actividad, lugares=lugares,
                            alertas=[v for v in riesgos if v["efectivo"] >= 10], brechas_mas=mas, brechas_menos=menos)
 
 
@@ -485,6 +497,7 @@ def voz():
     filas = [senal_dict(f) for f in con.execute(SQL_SENALES + " ORDER BY s.fecha DESC").fetchall()]
     mas, menos = analisis.brechas(variables)
     emergentes = grupos_emergentes(con, ver_sensible=puede_ver_sensible())
+    graficos = analisis.graficos_senales(filas, ver_sensible=puede_ver_sensible())
     con.close()
     return render_template("voz.html", por_validar=[f for f in filas if f["estado"] == "Por validar"],
                            validadas=[f for f in filas if f["estado"] == "Validada"],
@@ -492,7 +505,7 @@ def voz():
                            brechas_mas=mas, brechas_menos=menos, escenarios=nombres,
                            ver_sensible=puede_ver_sensible(),
                            enlace=url_for("reportar", _external=True), umbral=analisis.UMBRAL_BRECHA,
-                           emergentes=emergentes)
+                           emergentes=emergentes, graficos=graficos)
 
 
 @app.route("/voz/<int:sid>/<accion>", methods=["POST"])
@@ -974,10 +987,11 @@ def decisiones():
     por_id = {v["id"]: v for v in variables}
     compromisos = [por_id[k] for k, e in estados.items() if e["estado"] == "Aprobada" and k in por_id]
     descartadas = [por_id[k] for k, e in estados.items() if e["estado"] == "Descartada" and k in por_id]
+    graficos = analisis.graficos_compromisos(compromisos, estados)
     con.close()
     return render_template("decisiones.html", estados=estados, escenarios=nombres,
                            por_revisar=[v for v in items if abierta(v)], compromisos=compromisos,
-                           descartadas=descartadas)
+                           descartadas=descartadas, graficos=graficos)
 
 
 @app.route("/decisiones/<vid>", methods=["POST"])

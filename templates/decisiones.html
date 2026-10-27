@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% from '_graficos.html' import grafico %}
+{% block estilos %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/operations-charts.css') }}">
+{% endblock %}
 {% block titulo %}Compromisos{% endblock %}
 {% block h1 %}Decisiones y compromisos{% endblock %}
 {% block cabecera %}
@@ -12,16 +17,16 @@
 {% macro formulario(v, e, boton) %}
 <form method="post" action="{{ url_for('decision_actualizar', vid=v.id) }}" class="dec-form">
   <div class="row g-2">
-    <div class="col-sm-4"><label class="form-label small">Decisión</label>
-      <select class="form-select form-select-sm" name="estado">{% for o in OPCIONES.estado %}<option {{ 'selected' if e.get('estado', 'Pendiente') == o }}>{{ o }}</option>{% endfor %}</select></div>
-    <div class="col-sm-4"><label class="form-label small">Fecha límite</label>
-      <input type="date" class="form-control form-control-sm" name="fecha_limite" value="{{ e.get('fecha_limite') or '' }}"></div>
-    <div class="col-sm-4"><label class="form-label small">Comentario</label>
-      <input class="form-control form-control-sm" name="comentario" value="{{ e.get('comentario') or '' }}" placeholder="Opcional"></div>
-    <div class="col-12"><label class="form-label small mb-1">¿Quiénes se comprometen?</label>
+    <div class="col-sm-4"><label class="form-label small" for="estado-{{ v.id }}-{{ boton|replace(' ', '-') }}">Decisión</label>
+      <select class="form-select form-select-sm" name="estado" id="estado-{{ v.id }}-{{ boton|replace(' ', '-') }}">{% for o in OPCIONES.estado %}<option {{ 'selected' if e.get('estado', 'Pendiente') == o }}>{{ o }}</option>{% endfor %}</select></div>
+    <div class="col-sm-4"><label class="form-label small" for="fecha-{{ v.id }}-{{ boton|replace(' ', '-') }}">Fecha límite</label>
+      <input type="date" class="form-control form-control-sm" name="fecha_limite" id="fecha-{{ v.id }}-{{ boton|replace(' ', '-') }}" value="{{ e.get('fecha_limite') or '' }}"></div>
+    <div class="col-sm-4"><label class="form-label small" for="comentario-{{ v.id }}-{{ boton|replace(' ', '-') }}">Comentario</label>
+      <input class="form-control form-control-sm" name="comentario" id="comentario-{{ v.id }}-{{ boton|replace(' ', '-') }}" value="{{ e.get('comentario') or '' }}" placeholder="Opcional"></div>
+    <fieldset class="col-12"><legend class="form-label small mb-1">Responsables del compromiso</legend>
       <div class="actor-picks">{% set marcados = (e.get('actores') or '').split(', ') %}
         {% for a in ACTORES %}<input type="checkbox" name="actores" value="{{ a }}" id="a-{{ v.id }}-{{ loop.index }}" {{ 'checked' if a in marcados or (not e and a == v.responsable) }}><label for="a-{{ v.id }}-{{ loop.index }}">{{ a }}</label>{% endfor %}
-      </div></div>
+      </div></fieldset>
   </div>
   <div class="text-end mt-2"><button class="btn btn-primary btn-sm">{{ boton }}</button></div>
 </form>
@@ -39,7 +44,20 @@
 {% endmacro %}
 
 {% block contenido %}
-<div class="tab-content page">
+<section class="module-summary mt-4">
+  <div><span class="section-kicker">GESTIÓN Y RESPONSABILIDAD</span><h2>Prioridades que se convierten en acciones</h2>
+    <p>Revise las decisiones propuestas y consulte responsables, fechas y avances de los compromisos aprobados.</p></div>
+</section>
+<section class="workspace-metrics" aria-label="Estado de las decisiones">
+  <div class="metric-card"><span>Decisiones por revisar</span><strong>{{ por_revisar|length }}</strong></div>
+  <div class="metric-card"><span>Compromisos aprobados</span><strong>{{ compromisos|length }}</strong></div>
+  <div class="metric-card"><span>Decisiones descartadas</span><strong>{{ descartadas|length }}</strong></div>
+</section>
+<section class="operations-chart-grid commitments-chart-grid" aria-label="Seguimiento de compromisos aprobados">
+  {{ grafico('commitmentsStatusChart', 'Avance de los compromisos', 'ESTADO REGISTRADO', graficos.avances, 'doughnut', 'compromisos', 'Solo decisiones aprobadas. Muestra el estado registrado por el equipo, no un porcentaje de avance.') }}
+  {{ grafico('commitmentsOwnersChart', 'Compromisos por responsable', 'DISTRIBUCIÓN DEL SEGUIMIENTO', graficos.responsables, 'bar', 'asignaciones', 'Cada compromiso cuenta una vez por responsable asignado. Los compartidos aparecen en más de un responsable; «Sin asignar» indica que aún no tiene actores.') }}
+</section>
+<div class="tab-content page pt-0">
   <div class="tab-pane fade show active" id="t-abiertas" role="tabpanel">
     <p class="intro">Se generan solas para los riesgos en nivel alto o crítico y para las oportunidades de 12 o más, ya sea por la lectura técnica o por lo que reporta {{ T.gente }}.{% if session.rol == 'directivo' %} Al aprobar, elija quiénes se comprometen y para cuándo: así se vuelve un compromiso con seguimiento.{% else %} Solo {{ ROLES.directivo|lower }} aprueba o descarta.{% endif %}</p>
     <section class="panel">
@@ -92,5 +110,6 @@
 </div>
 {% endblock %}
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/operations-charts.js') }}" defer></script>
 <script>if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }</script>
 {% endblock %}

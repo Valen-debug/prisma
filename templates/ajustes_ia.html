@@ -1,10 +1,18 @@
 {% extends 'base.html' %}
 {% block titulo %}Inteligencia artificial{% endblock %}
 {% block contenido %}
-<div class="page" style="max-width: 880px">
+<div class="page operations-workspace">
+  <section class="module-summary">
+    <div><span class="section-kicker">CONFIGURACIÓN DEL SERVICIO</span><h2>Inteligencia artificial de la organización</h2>
+      <p>Gestione la conexión del servicio y consulte su uso diario. Las sugerencias se mantienen sujetas a la validación del equipo.</p></div>
+  </section>
+  <section class="workspace-metrics" aria-label="Resumen del servicio">
+    <div class="metric-card"><span>Estado del servicio</span><strong class="h5">{{ 'Configurado' if configurada else 'Modo básico' }}</strong></div>
+    <div class="metric-card"><span>Consultas utilizadas hoy</span><strong>{{ uso }} <small>/ {{ tope }}</small></strong></div>
+  </section>
   <div class="row g-4">
     <div class="col-md-7">
-      <section class="panel h-100"><h2>Estado</h2><div class="body">
+      <section class="panel h-100"><h2>Conexión y credenciales</h2><div class="body">
         {% if configurada %}
         <p class="mb-2"><span class="pill c-bajo"><i class="fa fa-circle-check me-1"></i>IA configurada</span></p>
         <p class="text-muted small">Clave terminada en <b>…{{ final }}</b>{{ ' (definida en el servidor)' if desde_entorno }}. Modelo: <code>{{ modelo }}</code>.</p>
@@ -18,7 +26,7 @@
         <form method="post" class="mb-3">
           <input type="hidden" name="accion" value="guardar">
           <label class="form-label" for="clave">Clave de la API de Anthropic</label>
-          <div class="d-flex gap-2"><input class="form-control" type="password" id="clave" name="clave" placeholder="sk-ant-…" autocomplete="off" required>
+          <div class="d-flex gap-2 flex-wrap"><input class="form-control" style="flex:1 1 200px;min-width:0" type="password" id="clave" name="clave" placeholder="sk-ant-…" autocomplete="off" required>
             <button class="btn btn-primary text-nowrap">Guardar y probar</button></div>
         </form>{% endif %}
         <div class="d-flex gap-2">

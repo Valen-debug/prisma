@@ -2,13 +2,14 @@
 {% block titulo %}Revisión crítica{% endblock %}
 {% block encabezado %}
 <div class="crumbs"><a href="{{ url_for('inicio') }}">Inicio</a><span>/</span><a href="{{ url_for('tablero') }}">Tablero</a><span>/</span><span>Revisión crítica</span></div>
-<div class="head"><h1>¿Dónde podemos estar equivocados?</h1>
+<div class="head"><h1>Revisión crítica del análisis</h1>
   <div class="actions"><form method="post" class="m-0"><button class="btn btn-primary btn-sm" onclick="this.disabled=true;this.form.submit();this.innerHTML='<span class=&quot;spinner-border spinner-border-sm&quot;></span> Revisando…'"><i class="fa fa-scale-unbalanced"></i>{{ 'Revisar de nuevo' if r else 'Revisar ahora' }}</button></form></div>
 </div>
 {% endblock %}
 {% block contenido %}
-<div class="page">
-  <p class="intro">Un PESTEL hecho por pocas personas tiene puntos ciegos. Aquí la IA hace de abogado del diablo sobre toda la lectura: qué falta medir, qué calificaciones no cuadran y qué estamos dando por hecho. Solo sugiere; {{ ROLES.analista|lower }} decide qué cambiar.</p>
+<div class="page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">CALIDAD DEL ANÁLISIS</span><h2>Identifique vacíos, inconsistencias y supuestos</h2><p>Una segunda lectura para fortalecer los criterios que respaldan las decisiones del equipo.</p></div></section>
+  <p class="intro">La IA revisa la cobertura de los factores PESTEL, la coherencia de las calificaciones y los supuestos del análisis. Las recomendaciones requieren validación; {{ ROLES.analista|lower }} decide qué cambiar.</p>
   {% if r %}
   <p class="small text-muted mb-3"><i class="fa fa-{{ 'wand-magic-sparkles' if r._motor == 'ia' else 'list-check' }} me-1"></i>{{ 'Revisión hecha por la IA' if r._motor == 'ia' else 'Revisión básica por reglas (IA sin configurar)' }} el {{ r._fecha }}. Se basa en el entorno actual, sin escenarios.</p>
   <div class="row g-4">
@@ -17,7 +18,7 @@
         {% if session.rol == 'analista' %}<a class="cambio" href="{{ url_for('variable_nueva') }}">Registrar <i class="fa fa-arrow-right"></i></a>{% endif %}</div>
       {% else %}<div class="empty">No se encontraron puntos ciegos.</div>{% endfor %}
     </section></div>
-    <div class="col-lg-6"><section class="panel h-100"><h2>Calificaciones dudosas <small>Hoy → propuesta</small></h2>
+    <div class="col-lg-6"><section class="panel h-100"><h2>Calificaciones por verificar <small>Actual → propuesta</small></h2>
       {% for d in r.dudosas %}<div class="rev-item"><div class="t">{{ d.nombre }}</div><div class="d">{{ d.observacion }}</div>
         <div class="cambio">{{ d.antes }} → <b>{{ d.propuesta }}</b>{% if session.rol == 'analista' %}<br><a href="{{ url_for('variable_editar', vid=d.variable_id) }}">Revisar <i class="fa fa-arrow-right"></i></a>{% endif %}</div></div>
       {% else %}<div class="empty">Las calificaciones parecen coherentes.</div>{% endfor %}

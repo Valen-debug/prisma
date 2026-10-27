@@ -5,14 +5,15 @@
 <div class="head"><h1>Revisar el escenario propuesto</h1></div>
 {% endblock %}
 {% block contenido %}
-<div class="page">
+<div class="page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">CONFIGURACIÓN DEL ESCENARIO</span><h2>Valide la hipótesis y sus efectos</h2><p>Defina el alcance, revise las variables afectadas y confirme las calificaciones antes de simular.</p></div><div class="summary-meta"><strong>{{ propuesta.efectos|length }}</strong><span>variables propuestas para revisión</span></div></section>
   <div class="ai-note mb-4"><i class="fa fa-wand-magic-sparkles"></i><div><b>¿Y si… {{ propuesta.pregunta }}</b><br>
     {{ 'La IA propone estas variables y valores.' if motor == 'ia' else 'Propuesta inicial por palabras clave (IA sin configurar).' }} Ajuste lo que haga falta: quite las que no apliquen, agregue otras y cambie los valores. Nada se guarda hasta que pulse «Guardar y simular».</div></div>
   <form method="post" action="{{ url_for('escenario_crear') }}">
     <input type="hidden" name="pregunta" value="{{ propuesta.pregunta }}"><input type="hidden" name="motor" value="{{ motor }}">
     <input type="hidden" name="cadena" value="{{ propuesta.cadena|tojson|forceescape }}">
     <div class="row g-4">
-      <div class="col-lg-4"><section class="panel"><h2>El escenario</h2><div class="body">
+      <div class="col-lg-4"><section class="panel"><h2>Definición del escenario</h2><div class="body">
         <label class="form-label" for="nombre">Nombre</label><input class="form-control mb-3" id="nombre" name="nombre" value="{{ propuesta.nombre }}" required maxlength="80">
         <label class="form-label" for="descripcion">Qué pasaría</label><textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ propuesta.descripcion }}</textarea>
         <button class="btn btn-primary w-100 mt-4" type="submit"><i class="fa fa-play"></i>Guardar y simular</button>
@@ -21,7 +22,7 @@
       </div>
       <div class="col-lg-8">
       {% if propuesta.cadena %}
-      <section class="panel mb-4"><h2>Efecto dominó <small>Rueda de futuros</small></h2><div class="body">
+      <section class="panel mb-4"><h2>Cadena de consecuencias <small>Rueda de futuros</small></h2><div class="body">
         <p class="small text-muted">Cómo un cambio arrastra a otros factores PESTEL: primero las consecuencias directas y luego las indirectas.</p>
         <ol class="cadena domino">{% for c in propuesta.cadena %}<li class="o{{ c.orden }}"><span class="tag">{{ c.factor_nombre }}</span>{{ c.consecuencia }}</li>{% endfor %}</ol>
       </div></section>

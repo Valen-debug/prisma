@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% from '_graficos.html' import grafico %}
+{% block estilos %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/operations-charts.css') }}">
+{% endblock %}
 {% block titulo %}{{ T.voz }}{% endblock %}
 {% block cabecera %}
 <div class="tabs nav" role="tablist">
@@ -36,15 +41,31 @@
 {% endmacro %}
 
 {% block contenido %}
-<div class="tab-content page">
+<section class="module-summary mt-4">
+  <div><span class="section-kicker">GESTIÓN DE SEÑALES</span><h2>Del reporte a la lectura del entorno</h2>
+    <p>Revise los reportes recibidos, identifique temas emergentes y contraste las señales con la lectura técnica.</p></div>
+  <a class="btn btn-quiet btn-sm" href="{{ url_for('reportar') }}" target="_blank" rel="noopener"><i class="fa fa-arrow-up-right-from-square" aria-hidden="true"></i>Abrir formulario</a>
+</section>
+<section class="workspace-metrics" aria-label="Estado de las señales">
+  <div class="metric-card"><span>Pendientes de validación</span><strong>{{ por_validar|length }}</strong></div>
+  <div class="metric-card"><span>Señales validadas</span><strong>{{ validadas|length }}</strong></div>
+  <div class="metric-card"><span>Temas emergentes</span><strong>{{ emergentes|length }}</strong></div>
+  <div class="metric-card"><span>Brechas identificadas</span><strong>{{ brechas_mas|length + brechas_menos|length }}</strong></div>
+</section>
+<section id="signals-charts" class="operations-chart-grid signals-chart-grid" aria-label="Distribución de los reportes">
+  {{ grafico('signalsStatusChart', 'Estado de los reportes', 'REVISIÓN Y VALIDACIÓN', graficos.estados, 'doughnut', 'reportes', 'Todo el historial recibido, incluidos los reportes descartados. Estado actual.') }}
+  {{ grafico('signalsTopicsChart', 'Temas más reportados', 'TEMAS DEL ENTORNO', graficos.temas, 'bar', 'reportes', 'Validados y pendientes de todo el historial. Excluye descartados; incluye temas sin variable asignada.') }}
+  {{ grafico('signalsLocationsChart', 'Reportes por ubicación', 'COBERTURA DE LA PARTICIPACIÓN', graficos.lugares, 'bar', 'reportes', 'Validados y pendientes de todo el historial. Más reportes no significa mayor riesgo.') }}
+</section>
+<div id="signals-content" class="tab-content page pt-0">
   <div class="tab-pane fade show active" id="validar" role="tabpanel">
     <p class="intro">Señales que llegan del formulario para reportar. {{ ROLES.analista }} las revisa antes de que cuenten en la lectura: así se evitan duplicados o reportes falsos.{% if session.rol != 'analista' %} Solo el rol técnico puede validar.{% endif %}</p>
     <section class="panel">{% for s in por_validar %}{{ senal(s, true) }}{% else %}<div class="empty">No hay señales por validar.</div>{% endfor %}</section>
   </div>
 
   <div class="tab-pane fade" id="validadas" role="tabpanel">
-    <p class="intro">Señales que ya cuentan en la {{ T.lectura_gente|lower }}. Los reportes de seguridad son siempre anónimos y su texto solo lo ven {{ ROLES.directivo|lower }} y {{ ROLES.analista|lower }}.</p>
-    <section class="panel">{% for s in validadas %}{{ senal(s) }}{% endfor %}</section>
+    <p class="intro">Historial de señales validadas. Solo las recibidas en los últimos 60 días y vinculadas a una variable cuentan en la {{ T.lectura_gente|lower }}. Los reportes de seguridad son siempre anónimos y su texto solo lo ven {{ ROLES.directivo|lower }} y {{ ROLES.analista|lower }}.</p>
+    <section class="panel">{% for s in validadas %}{{ senal(s) }}{% else %}<div class="empty">Todavía no hay señales validadas.</div>{% endfor %}</section>
   </div>
 
   <div class="tab-pane fade" id="emergentes" role="tabpanel">
@@ -109,7 +130,9 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script>if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }</script>
+<script src="{{ url_for('static', filename='js/signals-layout.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/operations-charts.js') }}" defer></script>
+
 <script src="{{ url_for('static', filename='vendor/qrcode/qrcode.js') }}"></script>
 <script>
 const enlace = {{ enlace|tojson }};

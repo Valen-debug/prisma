@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block titulo %}Agente vigía{% endblock %}
+{% block h1 %}Agente vigía del entorno{% endblock %}
+{% block cabecera %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-revisar" type="button" role="tab">Por revisar<span class="count">{{ por_revisar|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-revisadas" type="button" role="tab">Revisadas<span class="count">{{ revisadas|length }}</span></button>
+</div>
+{% endblock %}
+{% macro tarjeta(g, acciones) %}
+<div class="vg">
+  <div class="vg-score" title="Puntaje: 50 % impacto, 30 % credibilidad, 20 % novedad"><b>{{ g.puntaje|dec }}</b><span>de 5</span></div>
+  <div>
+    <div class="d-flex flex-wrap gap-1 mb-1 align-items-center">
+      <span class="tag">{{ dict(FACTORES)[g.factor] if g.factor in dict(FACTORES) else g.factor }}</span>
+      <span class="pill c-{{ 'oportunidad' if g.tipo == 'O' else 'alto' }}">{{ 'Oportunidad' if g.tipo == 'O' else 'Riesgo' }}</span>
+      {% if g.ejemplo %}<span class="chip">Ejemplo de la demostración</span>{% endif %}
+      {% if not g.variable_id %}<span class="ai-chip emer"><i class="fa fa-lightbulb"></i>Tema nuevo</span>{% endif %}
+    </div>
+    <h3>{{ g.titulo }}</h3>
+    <p class="mb-1">{{ g.resumen }}</p>
+    <div class="vg-meta">
+      <span>Impacto {{ g.impacto }}/5</span><span>Novedad {{ g.novedad }}/5</span><span>Credibilidad {{ g.credibilidad }}/5</span>
+      <span>{% if g.url %}<a href="{{ g.url }}" target="_blank" rel="noopener">{{ g.fuente or 'Fuente' }} <i class="fa fa-arrow-up-right-from-square"></i></a>{% else %}{{ g.fuente }}{% endif %}{% if g.fecha_fuente %} · {{ g.fecha_fuente }}{% endif %}</span>
+    </div>
+    {% if g.variable_id %}
+    <div class="vg-ajuste"><i class="fa fa-sliders"></i><div><b>{{ g.variable }}</b>: hoy P{{ g.p_actual }} × I{{ g.i_actual }}
+      {% if g.prob_sugerida and (g.prob_sugerida != g.p_actual or g.imp_sugerido != g.i_actual) %} → sugiere <b>P{{ g.prob_sugerida }} × I{{ g.imp_sugerido }}</b>{% else %} · sin cambio sugerido{% endif %}
+      {% if g.por_que %}<div class="small text-muted">{{ g.por_que }}</div>{% endif %}</div></div>
+    {% elif g.por_que %}<div class="small text-muted mt-1">{{ g.por_que }}</div>{% endif %}
+    {% if not acciones %}<div class="small text-muted mt-2">{{ g.estado }}{% if g.revisado_por %} por {{ g.revisado_por }}{% endif %}</div>{% endif %}
+  </div>
+  {% if acciones %}
+  <div class="vg-acc">
+    {% if session.rol == 'analista' %}
+      {% if g.variable_id and g.prob_sugerida and (g.prob_sugerida != g.p_actual or g.imp_sugerido != g.i_actual) %}
+      <form method="post" action="{{ url_for('vigia_revisar', gid=g.id, accion='aplicar') }}"><button class="btn btn-primary btn-sm w-100"><i class="fa fa-check"></i>Aplicar ajuste</button></form>
+      {% elif not g.variable_id %}
+      <form method="post" action="{{ url_for('vigia_revisar', gid=g.id, accion='variable') }}"><button class="btn btn-primary btn-sm w-100"><i class="fa fa-plus"></i>Crear variable</button></form>
+      {% endif %}
+      <form method="post" action="{{ url_for('vigia_revisar', gid=g.id, accion='aceptar') }}"><button class="btn btn-quiet btn-sm w-100">Solo como contexto</button></form>
+      <form method="post" action="{{ url_for('vigia_revisar', gid=g.id, accion='descartar') }}"><button class="btn btn-danger-quiet btn-sm w-100">Descartar</button></form>
+    {% else %}<span class="small text-muted">{{ ROLES.analista }} decide si se aplica.</span>{% endif %}
+  </div>{% endif %}
+</div>
+{% endmacro %}
+{% block contenido %}
+<div class="tab-content page analysis-workspace">
+  <section class="module-summary"><div><span class="section-kicker">MONITOREO DEL ENTORNO</span><h2>Señales externas con respaldo de fuentes</h2><p>Revise las novedades y valide su relevancia antes de incorporarlas a la lectura técnica.</p></div><div class="summary-meta"><strong>{{ por_revisar|length }}</strong><span>señales pendientes · {{ revisadas|length }} revisadas</span></div></section>
+  <div class="tab-pane fade show active" id="t-revisar" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+      <p class="intro mb-0">El agente propone señales de noticias e informes, calificadas por impacto, novedad y credibilidad. {{ ROLES.analista }} valida cada propuesta antes de actualizar las variables PESTEL.</p>
+      {% if session.rol in ('analista', 'directivo') %}
+      <form method="post" action="{{ url_for('vigia_buscar') }}"><button class="btn btn-primary" onclick="this.disabled=true;this.form.submit();this.innerHTML='<span class=&quot;spinner-border spinner-border-sm&quot;></span> Buscando noticias… (hasta 1 minuto)'"><i class="fa fa-satellite-dish"></i>Buscar señales nuevas</button></form>
+      {% endif %}
+    </div>
+    {% if not IA_ACTIVA %}<div class="ai-note mb-3"><i class="fa fa-circle-info"></i><div>El agente vigía necesita la IA configurada, porque busca en internet. Mientras tanto se muestran señales de ejemplo tomadas de las fuentes del contexto.</div></div>{% endif %}
+    <section class="panel">{% for g in por_revisar %}{{ tarjeta(g, true) }}{% else %}<div class="empty">No hay señales por revisar. Pulse «Buscar señales nuevas».</div>{% endfor %}</section>
+  </div>
+  <div class="tab-pane fade" id="t-revisadas" role="tabpanel">
+    <section class="panel">{% for g in revisadas %}{{ tarjeta(g, false) }}{% else %}<div class="empty">Todavía no hay señales revisadas.</div>{% endfor %}</section>
+  </div>
+</div>
+{% endblock %}

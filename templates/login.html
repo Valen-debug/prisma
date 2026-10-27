@@ -7,45 +7,66 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
 </head>
-<body>
+<body class="login-page">
 <div class="auth">
   <section class="side">
     <div class="brand">{{ marca(true) }}</div>
+    <span class="eyebrow auth-eyebrow">INTELIGENCIA DEL ENTORNO</span>
     <h1>{{ T.login_h1 }}</h1>
     <p>{{ T.login_p }}</p>
     <a class="btn btn-ochre mt-4 align-self-start" href="{{ url_for('reportar') }}"><i class="fa fa-bullhorn"></i>{{ T.login_boton }}</a>
+    <div class="auth-features"><span><i class="fa fa-chart-line" aria-hidden="true"></i> Lectura del entorno</span><span><i class="fa fa-people-group" aria-hidden="true"></i> Visión compartida</span><span><i class="fa fa-compass" aria-hidden="true"></i> Decisiones con sentido</span></div>
     <div class="horizon"></div>
     <small class="foot">Prototipo académico. Datos de demostración construidos a partir de fuentes públicas.</small>
   </section>
 
   <section class="form"><div class="in">
-    <h2>Ingresar</h2>
+    <span class="eyebrow">ACCESO AL EQUIPO</span>
+    <h2>Acceso a Prisma</h2>
     <p class="sub">Acceso para {{ T.equipo }}.</p>
     {% with mensajes = get_flashed_messages(with_categories=true) %}{% for cat, msg in mensajes %}
-      <div class="alert alert-{{ cat }} py-2">{{ msg }}</div>{% endfor %}{% endwith %}
-    <form method="post" id="ingreso">
+      <div class="alert alert-{{ cat }} py-2" role="alert">{{ msg }}</div>{% endfor %}{% endwith %}
+    <form method="post" id="ingreso" aria-label="Acceso al equipo">
       <div class="field"><label class="form-label" for="usuario">Usuario</label><i class="fa fa-user"></i>
-        <input class="form-control" id="usuario" name="usuario" autocomplete="username" required autofocus></div>
+        <input class="form-control" id="usuario" name="usuario" autocapitalize="none" spellcheck="false" autocomplete="username" required autofocus></div>
       <div class="field"><label class="form-label" for="clave">Contraseña</label><i class="fa fa-lock"></i>
         <input class="form-control" id="clave" name="clave" type="password" autocomplete="current-password" required>
         <button class="eye" type="button" id="ver" aria-label="Mostrar contraseña"><i class="fa fa-eye"></i></button></div>
-      <button class="btn btn-primary w-100" style="height:46px" type="submit">Ingresar</button>
+      <button class="btn btn-primary w-100" style="height:46px" type="submit"><span>Ingresar</span><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+      <p class="auth-status" id="auth-status" role="status" aria-live="polite"></p>
     </form>
     <div class="demo">
-      <p>Cuentas de demostración. Toque una para entrar con ella.</p>
+      <div class="demo-heading"><h3>Explorar la demostración</h3><span>DEMO</span></div>
+      <p>Seleccione un perfil para conocer sus herramientas.</p>
       {% for u, c, rol, i in [('coordinacion','coordinacion123','directivo','fa-user-tie'), ('tecnico','tecnico123','analista','fa-person-hiking'), ('ti','ti123','ti','fa-server')] %}{% set t = T.roles[rol] %}{% set d = T.roles_desc[rol] %}
       <button class="acc" type="button" data-u="{{ u }}" data-c="{{ c }}"><span class="ic"><i class="fa {{ i }}"></i></span><span><b>{{ t }}</b><span>{{ d }}</span></span><i class="fa fa-chevron-right go"></i></button>
       {% endfor %}
     </div>
+    <a class="auth-public-link" href="{{ url_for('seguimiento') }}">Consultar seguimiento público <i class="fa fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
   </div></section>
 </div>
 <script>
+const ingreso = document.getElementById('ingreso');
+ingreso.addEventListener('submit', function (event) {
+  if (ingreso.dataset.loading) { event.preventDefault(); return; }
+  ingreso.dataset.loading = 'true';
+  ingreso.setAttribute('aria-busy', 'true');
+  const boton = ingreso.querySelector('[type="submit"]');
+  boton.disabled = true;
+  boton.innerHTML = '<span class="button-spinner" aria-hidden="true"></span><span>Conectando…</span>';
+  document.querySelectorAll('.acc').forEach(function (b) { b.disabled = true; });
+  document.getElementById('auth-status').textContent = 'Estamos preparando tu espacio de trabajo…';
+});
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) location.reload();
+});
 document.querySelectorAll('.acc').forEach(function (b) {
   b.addEventListener('click', function () {
     document.getElementById('usuario').value = b.dataset.u;
     document.getElementById('clave').value = b.dataset.c;
-    document.getElementById('ingreso').submit();
+    document.getElementById('ingreso').requestSubmit();
   });
 });
 document.getElementById('ver').addEventListener('click', function () {

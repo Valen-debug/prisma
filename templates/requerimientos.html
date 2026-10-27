@@ -10,12 +10,16 @@
 {% endblock %}
 {% macro tabla(filas) %}
 <section class="panel"><div class="table-responsive"><table class="table">
-  <thead><tr><th>Código</th><th>Requerimiento</th><th>Dónde se cumple</th></tr></thead><tbody>
+  <thead><tr><th scope="col">Código</th><th scope="col">Requerimiento</th><th scope="col">Dónde se cumple</th></tr></thead><tbody>
   {% for c, r, d in filas %}<tr><td class="fw-semibold text-nowrap" style="color:var(--navy)">{{ c }}</td><td>{{ r }}</td><td class="muted text-nowrap">{{ d }}</td></tr>{% endfor %}
   </tbody></table></div></section>
 {% endmacro %}
 {% block contenido %}
-<div class="tab-content page">
+<section class="module-summary mt-4">
+  <div><span class="section-kicker">ALCANCE DEL PILOTO</span><h2>Capacidades y arquitectura</h2>
+    <p>Consulte los requerimientos funcionales, los criterios de calidad y el flujo de información de la plataforma.</p></div>
+</section>
+<div class="tab-content page pt-0">
   <div class="tab-pane fade show active" id="t-rf" role="tabpanel">
     <p class="intro">Lo que el sistema debe hacer para que cualquier organización lea su entorno junto con quienes viven su entorno.</p>
     {{ tabla([
