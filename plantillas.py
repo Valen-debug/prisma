@@ -65,7 +65,6 @@ PLANTILLAS = {
             ("Vanguardia", "https://www.vanguardia.com/", "posesión presidencial de 2026"),
             ("El Cronista", "https://www.cronista.com/", "extorsión en el Huila"),
             ("Mongabay", "https://es.mongabay.com/", "reglamento europeo EUDR"),
-            ("Naciones Unidas", "https://sdgs.un.org/es/goals", "Objetivos de Desarrollo Sostenible"),
         ],
     },
     "territorio": {
@@ -124,7 +123,6 @@ PLANTILLAS = {
             ("Mongabay", "https://es.mongabay.com/", "aplazamiento del reglamento europeo EUDR"),
             ("El Cronista", "https://www.cronista.com/", "extorsión a caficultores en el Huila"),
             ("Vanguardia", "https://www.vanguardia.com/", "posesión presidencial de 2026"),
-            ("Naciones Unidas", "https://sdgs.un.org/es/goals", "Objetivos de Desarrollo Sostenible"),
         ],
     },
     "cadena": {
@@ -181,7 +179,6 @@ PLANTILLAS = {
             ("Mongabay", "https://es.mongabay.com/", "aplazamiento del reglamento europeo EUDR"),
             ("Valora Analitik", "https://www.valoraanalitik.com/", "producción de café enero–mayo de 2026"),
             ("EUR-Lex", "https://eur-lex.europa.eu/eli/reg/2014/488/oj", "Reglamento (UE) 488/2014 sobre cadmio"),
-            ("Naciones Unidas", "https://sdgs.un.org/es/goals", "Objetivos de Desarrollo Sostenible"),
         ],
     },
     "industrial": {
@@ -239,7 +236,6 @@ PLANTILLAS = {
             ("Valora Analitik", "https://www.valoraanalitik.com/smurfit-westrock-construye-su-proyecto-mas-grande-en-colombia-una-caldera-de-biomasa-de-us1155-millones/", "caldera de biomasa en el Valle"),
             ("Observatorio de Conflictos Ambientales, UNAL", "https://conflictosambientales.unal.edu.co/oca/env_problems/viewEnvProblem/12", "conflictos por plantaciones en el Cauca"),
             ("Vanguardia", "https://www.vanguardia.com/", "posesión presidencial de 2026"),
-            ("Naciones Unidas", "https://sdgs.un.org/es/goals", "Objetivos de Desarrollo Sostenible"),
         ],
     },
 }

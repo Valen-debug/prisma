@@ -8,7 +8,7 @@ construidos por el equipo a partir de información pública; no son mediciones o
 import json
 import os
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from werkzeug.security import generate_password_hash
@@ -168,7 +168,10 @@ USUARIOS = [("coordinacion", "coordinacion123", "directivo"), ("tecnico", "tecni
 IA_DEMO = {"motor": "ia", "confianza": "alta", "datos_protegidos": [], "explicacion": "Clasificada por la IA y confirmada por la persona."}
 
 
-ZONA = ZoneInfo(os.environ.get("PRISMA_ZONA", "America/Bogota"))
+try:
+    ZONA = ZoneInfo(os.environ.get("PRISMA_ZONA", "America/Bogota"))
+except Exception:  # Windows sin la base de zonas horarias: Colombia es UTC-5 todo el año
+    ZONA = timezone(timedelta(hours=-5))
 
 
 def hora_local():
