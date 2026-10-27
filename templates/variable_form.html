@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% set solo_fuente = session.rol == 'ti' %}
+{% set editar = v and not nueva %}
+{% block titulo %}{{ 'Editar variable' if editar else 'Registrar variable' }}{% endblock %}
+{% block encabezado %}
+<div class="crumbs"><a href="{{ url_for('inicio') }}">Inicio</a><span>/</span><a href="{{ url_for('variables') }}">Variables PESTEL</a><span>/</span><span>{{ v.nombre if editar else 'Nueva' }}</span></div>
+<div class="head"><h1>{{ 'Editar variable' if editar else 'Registrar variable' }}</h1></div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+  {% if solo_fuente %}<p class="intro">Como administrador de TI puede cambiar la fuente, su confiabilidad y cada cuánto se actualiza. El resto lo califica el analista.</p>{% endif %}
+  {% if v and v.emergente %}
+  <div class="ai-note mb-4"><i class="fa fa-wand-magic-sparkles"></i><div><b>{{ 'Propuesta de la IA' if v.motor == 'ia' else 'Propuesta inicial' }} a partir del tema emergente «{{ v.emergente }}».</b>
+    Revise y ajuste lo que haga falta antes de guardar. Al guardar, las señales de campo sobre este tema empezarán a contar en la nueva variable.</div></div>
+  {% endif %}
+  <form method="post">
+  {% if v and v.emergente %}<input type="hidden" name="emergente" value="{{ v.emergente }}">{% endif %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <section class="panel"><h2>La variable</h2><div class="body row g-3">
+        <div class="col-md-4"><label class="form-label" for="factor">Factor PESTEL</label>
+          <select class="form-select" id="factor" name="factor" {{ 'disabled' if solo_fuente }}>{% for k, n in FACTORES %}<option value="{{ k }}" {{ 'selected' if v and v.factor == k }}>{{ n }}</option>{% endfor %}</select></div>
+        <div class="col-md-8"><label class="form-label" for="nombre">Nombre</label>
+          <input class="form-control" id="nombre" name="nombre" required value="{{ v.nombre if v }}" placeholder="Ej.: Precio del fertilizante" {{ 'disabled' if solo_fuente }}></div>
+        <div class="col-12"><label class="form-label" for="descripcion">Por qué afecta a la organización</label>
+          <textarea class="form-control" id="descripcion" name="descripcion" rows="2" {{ 'disabled' if solo_fuente }}>{{ v.descripcion if v }}</textarea></div>
+        <div class="col-md-4"><label class="form-label" for="tipo">Tipo</label>
+          <select class="form-select" id="tipo" name="tipo" {{ 'disabled' if solo_fuente }}><option value="R" {{ 'selected' if v and v.tipo == 'R' }}>Riesgo</option><option value="O" {{ 'selected' if v and v.tipo == 'O' }}>Oportunidad</option></select></div>
+        <div class="col-md-4"><label class="form-label" for="tendencia">Tendencia</label>
+          <select class="form-select" id="tendencia" name="tendencia" {{ 'disabled' if solo_fuente }}>{% for o in OPCIONES.tendencia %}<option {{ 'selected' if v and v.tendencia == o }}>{{ o }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><label class="form-label" for="horizonte">Plazo</label>
+          <select class="form-select" id="horizonte" name="horizonte" {{ 'disabled' if solo_fuente }}>{% for o in OPCIONES.horizonte %}<option {{ 'selected' if (v and v.horizonte == o) or (not v and o == 'Mediano') }}>{{ o }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><label class="form-label" for="cultivo">{{ T.categoria }}</label>
+          <select class="form-select" id="cultivo" name="cultivo" {{ 'disabled' if solo_fuente }}>{% for o in OPCIONES.cultivo %}<option {{ 'selected' if v and v.cultivo == o }}>{{ o }}</option>{% endfor %}</select></div>
+        <div class="col-md-8"><label class="form-label" for="senal">Cómo aparece en el formulario para reportar <span class="form-hint">en palabras sencillas</span></label>
+          <input class="form-control" id="senal" name="senal" value="{{ v.senal if v }}" placeholder="Ej.: Subió el abono" maxlength="40" {{ 'disabled' if solo_fuente }}></div>
+        <div class="col-md-8"><label class="form-label" for="decision">Acción sugerida si llega a nivel alto</label>
+          <input class="form-control" id="decision" name="decision" value="{{ v.decision if v }}" {{ 'disabled' if solo_fuente }}></div>
+        <div class="col-md-4"><label class="form-label" for="responsable">Actor responsable</label>
+          <select class="form-select" id="responsable" name="responsable" {{ 'disabled' if solo_fuente }}>{% for a in ACTORES %}<option {{ 'selected' if v and v.responsable == a }}>{{ a }}</option>{% endfor %}</select></div>
+      </div></section>
+      <section class="panel mt-4"><h2>Fuente de información</h2><div class="body row g-3">
+        <div class="col-md-6"><label class="form-label" for="fuente">Fuente</label>
+          <input class="form-control" id="fuente" name="fuente" value="{{ v.fuente if v }}" placeholder="Ej.: Banco de la República"></div>
+        <div class="col-md-3"><label class="form-label" for="confiabilidad">Confiabilidad</label>
+          <select class="form-select" id="confiabilidad" name="confiabilidad">{% for o in OPCIONES.confiabilidad %}<option {{ 'selected' if v and v.confiabilidad == o }}>{{ o }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><label class="form-label" for="frecuencia">Actualización</label>
+          <select class="form-select" id="frecuencia" name="frecuencia">{% for o in OPCIONES.frecuencia %}<option {{ 'selected' if (v and v.frecuencia == o) or (not v and o == 'Mensual') }}>{{ o }}</option>{% endfor %}</select></div>
+      </div></section>
+    </div>
+    <div class="col-lg-4">
+      <section class="panel"><h2>Calificación</h2><div class="body">
+        <label class="form-label" for="probabilidad">Probabilidad <span class="form-hint">de 1 (rara) a 5 (casi segura)</span></label>
+        <select class="form-select mb-3" id="probabilidad" name="probabilidad" {{ 'disabled' if solo_fuente }}>{% for n in range(1,6) %}<option {{ 'selected' if (v and v.probabilidad == n) or (not v and n == 3) }}>{{ n }}</option>{% endfor %}</select>
+        <label class="form-label" for="impacto">Impacto <span class="form-hint">de 1 (leve) a 5 (grave)</span></label>
+        <select class="form-select" id="impacto" name="impacto" {{ 'disabled' if solo_fuente }}>{% for n in range(1,6) %}<option {{ 'selected' if (v and v.impacto == n) or (not v and n == 3) }}>{{ n }}</option>{% endfor %}</select>
+        <div class="mt-4 pt-3 border-top d-flex align-items-center gap-3" id="preview"><span class="score" style="font-size:22px;height:44px;min-width:56px" id="pv"></span><div><div class="text-muted small">Nivel calculado</div><span class="pill" id="pn"></span></div></div>
+      </div></section>
+      {% if not solo_fuente %}
+      <section class="panel mt-4" id="panel-expertos"><h2>Panel de expertos <small>Método Delphi con IA</small></h2><div class="body">
+        <p class="small text-muted mb-3">Seis expertos, uno por cada factor PESTEL, califican esta variable por separado. Si no se ponen de acuerdo, hay incertidumbre: eso también es información.</p>
+        <input type="hidden" name="panel_acuerdo" id="panel_acuerdo">
+        <button class="btn btn-quiet w-100" type="button" id="consultar"><i class="fa fa-users-viewfinder"></i>Consultar panel</button>
+        <div id="panel-res" class="mt-3"></div>
+      </div></section>
+      {% endif %}
+      <div class="d-flex gap-2 mt-4">
+        <a href="{{ url_for('variables') }}" class="btn btn-quiet flex-fill">Cancelar</a>
+        <button class="btn btn-primary flex-fill" type="submit">{{ 'Guardar cambios' if editar else 'Registrar variable' }}</button>
+      </div>
+    </div>
+  </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const p = document.getElementById('probabilidad'), i = document.getElementById('impacto'), box = document.getElementById('preview');
+function upd() {
+  const s = p.value * i.value;
+  const [n, c] = s >= 20 ? ['Crítico', 'c-critico'] : s >= 10 ? ['Alto', 'c-alto'] : s >= 5 ? ['Medio', 'c-medio'] : ['Bajo', 'c-bajo'];
+  box.className = 'mt-4 pt-3 border-top d-flex align-items-center gap-3 ' + c;
+  document.getElementById('pv').textContent = s; document.getElementById('pn').textContent = n;
+}
+p.addEventListener('change', upd); i.addEventListener('change', upd); upd();
+const btn = document.getElementById('consultar'), res = document.getElementById('panel-res');
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+if (btn) btn.addEventListener('click', async function () {
+  const datos = new FormData();
+  ['factor', 'nombre', 'descripcion', 'tipo', 'horizonte'].forEach(k => datos.append(k, document.getElementById(k).value));
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Consultando a los seis expertos…';
+  res.innerHTML = '';
+  try {
+    const r = await fetch({{ url_for('ia_panel')|tojson }}, {method: 'POST', body: datos, headers: {'X-CSRF': CSRF}});
+    const j = await r.json();
+    if (!j.ok) { res.innerHTML = '<div class="alert alert-warning small mb-0">' + esc(j.error) + '</div>'; return; }
+    const c = j.consenso;
+    const texto = {Alto: 'Los expertos coinciden.', Medio: 'Hay algunas diferencias entre los expertos.',
+                   Bajo: 'Los expertos no se ponen de acuerdo: alta incertidumbre. Conviene vigilarla de cerca y buscar más información.'}[c.acuerdo];
+    res.innerHTML = j.opiniones.map(o => `<div class="experto"><span class="ltr">${esc(o.letra)}</span><div><div class="t">${esc(o.experto)} <b>P${o.probabilidad} × I${o.impacto}</b></div><div class="d">${esc(o.razon)}</div></div></div>`).join('')
+      + `<div class="consenso acuerdo-${c.acuerdo.toLowerCase()}"><div><b>Consenso: P${c.probabilidad} × I${c.impacto} = ${c.puntaje}</b> (${c.nivel})</div>
+         <div class="small">Acuerdo ${c.acuerdo.toLowerCase()}: probabilidad de ${c.rango_p}, impacto de ${c.rango_i}. ${texto}</div>
+         <button class="btn btn-primary btn-sm mt-2" type="button" id="usar">Usar el consenso</button></div>`;
+    document.getElementById('usar').addEventListener('click', function () {
+      p.value = c.probabilidad; i.value = c.impacto; upd();
+      document.getElementById('panel_acuerdo').value = c.acuerdo;
+      this.outerHTML = '<span class="small"><i class="fa fa-check"></i> Aplicado. Guarde para confirmar.</span>';
+    });
+  } catch (e) {
+    res.innerHTML = '<div class="alert alert-warning small mb-0">No se pudo consultar el panel. Revise la conexión e inténtelo de nuevo.</div>';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa fa-users-viewfinder"></i>Consultar de nuevo';
+  }
+});
+</script>
+{% endblock %}

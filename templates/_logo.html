@@ -1,0 +1,7 @@
+{# Logo de Prisma: un hexágono (seis caras = seis factores PESTEL) con una cara en ocre de cosecha #}
+{% macro logo(inverso=false) -%}
+<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2.5 26 8.75v12.5L15 27.5 4 21.25V8.75Z" fill="{{ '#FFFFFF' if inverso else '#143D34' }}"/><path d="M15 2.5v25M4 8.75l22 12.5" stroke="{{ '#143D34' if inverso else '#FFFFFF' }}" stroke-opacity="{{ '.25' if inverso else '.35' }}" stroke-width="1.2"/><path d="M15 2.5 26 8.75 15 15Z" fill="#D8962F"/></svg>
+{%- endmacro %}
+{% macro marca(inverso=false) -%}
+{{ logo(inverso) }}<span class="wm">{{ APP }}<em>{{ LEMA }}</em></span><small>{{ T.sector }}</small>
+{%- endmacro %}

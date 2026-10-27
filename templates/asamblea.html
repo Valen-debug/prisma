@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from '_logo.html' import logo %}
+{% block titulo %}{{ T.ficha }} · {{ m.nombre }}{% endblock %}
+{% block encabezado %}
+<div class="crumbs no-print"><a href="{{ url_for('territorio') }}">{{ T.mapa }}</a><span>/</span><a href="{{ url_for('municipio', mid=m.id) }}">{{ m.nombre }}</a><span>/</span><span>{{ T.ficha }}</span></div>
+<div class="head no-print"><h1>{{ T.ficha }}</h1>
+  <div class="actions"><button class="btn btn-primary btn-sm" onclick="window.print()"><i class="fa fa-print"></i>Imprimir o guardar PDF</button></div></div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+<article class="ficha">
+  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+    <div><h1>¿Cómo está {{ m.nombre }}?</h1><div class="sub">Lo que dice {{ T.gente }} · {{ m.departamento }} · {{ hoy }}</div></div>
+    <div class="d-flex align-items-center gap-2">{{ logo() }}<b style="color:var(--navy)">{{ APP }}</b></div>
+  </div>
+
+  {% if boletin %}<h2>En pocas palabras</h2>
+  <p style="font-size:17px" class="mb-1"><b>{{ boletin.titular }}</b></p>
+  <p>{{ boletin.que_pasa }}</p>{% endif %}
+
+  <h2>El semáforo</h2>
+  <div class="sem">
+    {% for c in comunidad %}
+    <div class="c-{{ c.clase }}"><div class="c"></div><b>{{ c.nombre }}</b><span>{{ c.nivel if c.indice is not none else 'Sin reportes' }}</span></div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-md-6">
+      <h2>Lo que más nos preocupa</h2>
+      <ol class="big-list">{% for v in preocupaciones %}<li><b>{{ v.nombre.split(':')[0] }}</b><br><span class="text-muted">{{ v.com_n }} {{ 'persona lo reportó' if v.com_n == 1 else 'reportes' }}. Qué se propone: {{ v.decision|minuscula }}</span></li>{% else %}<li>Aún no hay reportes.</li>{% endfor %}</ol>
+    </div>
+    <div class="col-md-6">
+      <h2>Oportunidades para aprovechar</h2>
+      <ul class="big-list">{% for v in oportunidades %}<li><b>{{ v.nombre }}</b><br><span class="text-muted">{{ v.decision }}</span></li>{% endfor %}</ul>
+    </div>
+  </div>
+
+  {% if voces %}<h2>Lo que nos dijeron</h2>
+  {% for s in voces %}<p class="voz">«{{ s.descripcion }}»</p>{% endfor %}{% endif %}
+
+  <h2>Compromisos y quién responde</h2>
+  {% for c in compromisos %}<p class="mb-2"><b>{{ c.decision }}</b><br><span class="text-muted">{{ c.actores or 'Actores por definir' }}{% if c.fecha_limite %} · antes del {{ c.fecha_limite }}{% endif %} · {{ c.avance }}</span></p>
+  {% else %}<p class="text-muted">Todavía no hay compromisos aprobados.</p>{% endfor %}
+
+  <h2>Para conversar</h2>
+  <div class="preg">{{ T.ficha_pregunta }}
+    {% if boletin and boletin.preguntas %}<ul class="mb-0 mt-2">{% for q in boletin.preguntas %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}</div>
+  <div class="ficha-qr"><div id="qr" aria-label="Código QR del formulario para reportar"></div>
+    <p class="small text-muted mb-0"><b style="color:var(--navy)">¿Ve algo en su {{ T.lugar }}? Repórtelo desde el celular.</b><br>Escanee el código o entre a {{ url_for('reportar', m=m.id, _external=True) }}. No pedimos nombre ni teléfono. Datos de demostración.</p></div>
+</article>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/qrcode/qrcode.js') }}"></script>
+<script>const q = qrcode(0, 'M'); q.addData({{ url_for('reportar', m=m.id, _external=True)|tojson }}); q.make();
+document.getElementById('qr').innerHTML = q.createSvgTag({cellSize: 4, margin: 1, scalable: true});</script>
+{% endblock %}

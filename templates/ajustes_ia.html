@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block titulo %}Inteligencia artificial{% endblock %}
+{% block contenido %}
+<div class="page" style="max-width: 880px">
+  <div class="row g-4">
+    <div class="col-md-7">
+      <section class="panel h-100"><h2>Estado</h2><div class="body">
+        {% if configurada %}
+        <p class="mb-2"><span class="pill c-bajo"><i class="fa fa-circle-check me-1"></i>IA configurada</span></p>
+        <p class="text-muted small">Clave terminada en <b>…{{ final }}</b>{{ ' (definida en el servidor)' if desde_entorno }}. Modelo: <code>{{ modelo }}</code>.</p>
+        {% else %}
+        <p class="mb-2"><span class="pill c-medio"><i class="fa fa-circle-info me-1"></i>Modo básico</span></p>
+        <p class="text-muted small">Sin clave, Prisma funciona igual con reglas simples: clasifica por palabras clave y protege teléfonos, correos, documentos y nombres con tratamiento (don, señora…). Con IA entiende el relato completo, lee fotos, detecta temas nuevos y redacta boletines.</p>
+        {% endif %}
+        {% if prueba %}<div class="alert alert-{{ 'success' if prueba[0] else 'warning' }} small mb-3">{{ prueba[1] }}</div>{% endif %}
+        {% if error and not prueba %}<div class="alert alert-warning small mb-3">Último error de la IA: {{ error }}. Mientras tanto se usan las reglas.</div>{% endif %}
+        {% if not desde_entorno %}
+        <form method="post" class="mb-3">
+          <input type="hidden" name="accion" value="guardar">
+          <label class="form-label" for="clave">Clave de la API de Anthropic</label>
+          <div class="d-flex gap-2"><input class="form-control" type="password" id="clave" name="clave" placeholder="sk-ant-…" autocomplete="off" required>
+            <button class="btn btn-primary text-nowrap">Guardar y probar</button></div>
+        </form>{% endif %}
+        <div class="d-flex gap-2">
+          {% if configurada %}<form method="post"><input type="hidden" name="accion" value="probar"><button class="btn btn-quiet btn-sm"><i class="fa fa-plug"></i>Probar conexión</button></form>{% endif %}
+          {% if configurada and not desde_entorno %}<form method="post"><input type="hidden" name="accion" value="borrar"><button class="btn btn-danger-quiet btn-sm"><i class="fa fa-trash-can"></i>Quitar clave</button></form>{% endif %}
+        </div>
+      </div></section>
+    </div>
+    <div class="col-md-5">
+      <section class="panel h-100"><h2>Cómo se usa la IA</h2><div class="body small">
+        <ul class="ps-3 mb-3">
+          <li>Lee los reportes de campo y sugiere tema y gravedad.</li>
+          <li>Quita nombres, teléfonos y lugares exactos antes de guardar.</li>
+          <li>Describe las fotos («posible roya»).</li>
+          <li>Agrupa temas nuevos que aún no son variables.</li>
+          <li>Redacta boletines con lo que pasa en cada lugar.</li>
+          <li>Panel de expertos: seis perspectivas PESTEL califican una variable.</li>
+          <li>Escenarios «¿Y si…?» con su efecto dominó.</li>
+          <li>Revisión crítica: «¿dónde podemos estar equivocados?».</li>
+        </ul>
+        <p class="text-muted">Uso de hoy: <b>{{ uso }}</b> de {{ tope }} consultas (tope diario para controlar el gasto).</p>
+        <p class="text-muted mb-0">La IA sugiere; una persona del equipo valida. Solo se envían textos ya protegidos y nunca los datos de quien reporta.</p>
+      </div></section>
+    </div>
+  </div>
+  <p class="note">Para obtener la clave: entre a console.anthropic.com, cree una cuenta, cargue crédito en «Billing» y genere una clave en «API keys». En el servidor también se puede definir como variable de entorno <code>ANTHROPIC_API_KEY</code>.</p>
+</div>
+{% endblock %}

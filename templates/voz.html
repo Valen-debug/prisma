@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ T.voz }}{% endblock %}
+{% block cabecera %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#validar" type="button" role="tab">Por validar<span class="count">{{ por_validar|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#validadas" type="button" role="tab">Validadas<span class="count">{{ validadas|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emergentes" type="button" role="tab"><i class="fa fa-lightbulb me-1" style="color:var(--sky)"></i>Lo emergente<span class="count">{{ emergentes|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#brechas" type="button" role="tab">Brechas<span class="count">{{ brechas_mas|length + brechas_menos|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#invitar" type="button" role="tab">Invitar a reportar</button>
+</div>
+{% endblock %}
+
+{% macro senal(s, acciones=false) %}
+<div class="senal"><span class="ic"><i class="fa {{ s.icono }}"></i></span>
+  <div><div class="t">{{ s.variable }} <span class="chip ms-1">{{ s.municipio }}</span>{% if s.origen == 'Sin conexión' %} <span class="chip pdet"><i class="fa fa-wifi"></i>Enviada sin conexión</span>{% endif %}</div>
+    {% if s.sensible and not ver_sensible %}<div class="q res">Contenido reservado por seguridad.</div>
+    {% elif s.descripcion %}<div class="q">«{{ s.descripcion }}»</div>{% endif %}
+    {% if s.foto and (ver_sensible or not s.sensible) %}<a href="{{ url_for('foto', nombre=s.foto) }}" target="_blank" rel="noopener"><img class="thumb" src="{{ url_for('foto', nombre=s.foto) }}" alt="Foto del reporte"></a>{% endif %}
+    {% if s.ia %}<div class="d-flex flex-wrap gap-1 mt-1">
+      {% if s.ia.motor == 'ia' %}<span class="ai-chip" title="{{ s.ia.explicacion or '' }}"><i class="fa fa-wand-magic-sparkles"></i>IA · confianza {{ s.ia.confianza }}</span>{% else %}<span class="ai-chip"><i class="fa fa-gears"></i>Clasificación básica</span>{% endif %}
+      {% if s.ia.datos_protegidos %}<span class="ai-chip prot"><i class="fa fa-user-shield"></i>{{ s.ia.datos_protegidos|length }} {{ 'dato protegido' if s.ia.datos_protegidos|length == 1 else 'datos protegidos' }}</span>{% endif %}
+      {% if s.emergente and not s.variable_id %}<span class="ai-chip emer"><i class="fa fa-lightbulb"></i>Tema emergente</span>{% endif %}
+      {% if s.ia.foto %}<span class="ai-chip"><i class="fa fa-image"></i>{{ s.ia.foto }}</span>{% endif %}
+    </div>{% endif %}
+    <div class="m">{{ s.fecha|fecha_corta }} · {{ 'Anónimo' if s.sensible else s.quien }} · afecta «{{ GRAVEDAD[s.gravedad]|lower }}»{% if s.validado_por and s.estado != 'Por validar' %} · {{ s.estado|lower }} por {{ s.validado_por }}{% endif %}</div>
+  </div>
+  <div class="text-end">
+    <span class="dots c-{{ 'critico' if s.gravedad >= 5 else 'alto' if s.gravedad >= 4 else 'medio' }}" title="Gravedad {{ s.gravedad }} de 5">{% for i in range(5) %}<i class="{{ 'on' if i < s.gravedad }}"></i>{% endfor %}</span>
+    {% if acciones and session.rol == 'analista' %}
+    <div class="d-flex gap-2 mt-2 justify-content-end">
+      <form method="post" action="{{ url_for('voz_validar', sid=s.id, accion='descartar') }}"><button class="btn btn-quiet btn-sm">Descartar</button></form>
+      <form method="post" action="{{ url_for('voz_validar', sid=s.id, accion='validar') }}"><button class="btn btn-primary btn-sm"><i class="fa fa-check"></i>Validar</button></form>
+    </div>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% block contenido %}
+<div class="tab-content page">
+  <div class="tab-pane fade show active" id="validar" role="tabpanel">
+    <p class="intro">Señales que llegan del formulario para reportar. {{ ROLES.analista }} las revisa antes de que cuenten en la lectura: así se evitan duplicados o reportes falsos.{% if session.rol != 'analista' %} Solo el rol técnico puede validar.{% endif %}</p>
+    <section class="panel">{% for s in por_validar %}{{ senal(s, true) }}{% else %}<div class="empty">No hay señales por validar.</div>{% endfor %}</section>
+  </div>
+
+  <div class="tab-pane fade" id="validadas" role="tabpanel">
+    <p class="intro">Señales que ya cuentan en la {{ T.lectura_gente|lower }}. Los reportes de seguridad son siempre anónimos y su texto solo lo ven {{ ROLES.directivo|lower }} y {{ ROLES.analista|lower }}.</p>
+    <section class="panel">{% for s in validadas %}{{ senal(s) }}{% endfor %}</section>
+  </div>
+
+  <div class="tab-pane fade" id="emergentes" role="tabpanel">
+    <p class="intro">Reportes que no encajan en ninguna de las variables que medimos. La IA los agrupa por tema para que el equipo decida si hay algo nuevo en el entorno. Así la lectura PESTEL se alimenta desde abajo.</p>
+    <section class="panel">
+    {% for g in emergentes %}
+      <div class="emer-card">
+        <div>
+          <h3><i class="fa fa-lightbulb me-2" style="color:var(--sky)"></i>{{ g.tema }}</h3>
+          <div class="d-flex flex-wrap gap-1 mb-1"><span class="chip">{{ g.senales|length }} {{ 'reporte' if g.senales|length == 1 else 'reportes' }}</span>
+            {% for m in g.municipios %}<span class="chip">{{ m }}</span>{% endfor %}
+            <span class="chip">{{ g.validadas }} validados</span></div>
+          {% for s in g.senales[:3] %}<p class="q">«{{ s.descripcion }}»</p>{% endfor %}
+        </div>
+        <div class="text-end">
+          {% if session.rol == 'analista' %}
+          <form method="post" action="{{ url_for('emergente_a_variable') }}"><input type="hidden" name="tema" value="{{ g.tema }}">
+            <button class="btn btn-primary btn-sm"><i class="fa fa-wand-magic-sparkles"></i>Convertir en variable</button></form>
+          <div class="small text-muted mt-2" style="max-width:200px">La IA propone factor, calificación y acción; usted revisa.</div>
+          {% else %}<span class="small text-muted">{{ ROLES.analista }} decide si se vuelve variable.</span>{% endif %}
+        </div>
+      </div>
+    {% else %}<div class="empty">No hay temas emergentes por ahora.</div>{% endfor %}
+    </section>
+  </div>
+
+  <div class="tab-pane fade" id="brechas" role="tabpanel">
+    <p class="intro">Una brecha aparece cuando la {{ T.lectura_gente|lower }} y la técnica se separan {{ umbral }} puntos o más. Si {{ T.gente }} ve más riesgo, puede ser una señal temprana que los datos todavía no muestran. Si lo percibe menos, puede faltar información en campo.</p>
+    <div class="row g-4">
+      <div class="col-lg-6"><section class="panel h-100"><h2>{{ T.gente|capitalize }} ve más riesgo <small>Posible alerta temprana</small></h2>
+        {% for v in brechas_mas %}
+        <div class="row-item c-{{ v.clase_comunidad }}"><span class="gap mas">+{{ v.brecha }}</span>
+          <div><div class="t">{{ v.nombre }}</div><div class="d">{{ T.Gente }} {{ v.com_puntaje }} ({{ v.com_n }} señales) frente a técnica {{ v.puntaje }}.</div></div>
+          <a class="btn btn-quiet btn-sm" href="{{ url_for('decisiones') }}">Decidir</a></div>
+        {% else %}<div class="empty">Sin brechas de este tipo.</div>{% endfor %}
+      </section></div>
+      <div class="col-lg-6"><section class="panel h-100"><h2>{{ T.gente|capitalize }} lo percibe menos <small>Necesita información</small></h2>
+        {% for v in brechas_menos %}
+        <div class="row-item c-oportunidad"><span class="gap menos">{{ v.brecha }}</span>
+          <div><div class="t">{{ v.nombre }}</div><div class="d">{{ T.Gente }} {{ v.com_puntaje }} frente a técnica {{ v.puntaje }}. Sugerencia: {{ v.decision|minuscula }}</div></div>
+          <span></span></div>
+        {% else %}<div class="empty">Sin brechas de este tipo.</div>{% endfor %}
+      </section></div>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="invitar" role="tabpanel">
+    <section class="panel"><div class="body qr-box">
+      <div id="qr" aria-label="Código QR del formulario para reportar"></div>
+      <div>
+        <h2 class="h5 mb-2" style="color:var(--navy)">Invite a reportar desde el celular</h2>
+        <p class="text-muted">Cualquier persona escanea este código con el celular y reporta lo que ve en su {{ T.lugar }} en menos de un minuto. No se pide nombre ni teléfono. Si no hay señal, el reporte se guarda en el celular y se envía solo cuando vuelva la conexión.</p>
+        <div class="link-box mb-3" id="enlace">{{ enlace }}</div>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-quiet btn-sm" type="button" id="copiar"><i class="fa fa-copy"></i>Copiar enlace</button>
+          <a class="btn btn-primary btn-sm" href="{{ url_for('reportar') }}" target="_blank" rel="noopener"><i class="fa fa-mobile-screen"></i>Abrir formulario</a>
+          <button class="btn btn-quiet btn-sm" type="button" onclick="window.print()"><i class="fa fa-print"></i>Imprimir cartel</button>
+        </div>
+      </div>
+    </div></section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }</script>
+<script src="{{ url_for('static', filename='vendor/qrcode/qrcode.js') }}"></script>
+<script>
+const enlace = {{ enlace|tojson }};
+const qr = qrcode(0, 'M'); qr.addData(enlace); qr.make();
+document.getElementById('qr').innerHTML = qr.createSvgTag({cellSize: 6, margin: 2, scalable: true});
+document.getElementById('copiar').addEventListener('click', function () {
+  navigator.clipboard.writeText(enlace).then(() => { this.innerHTML = '<i class="fa fa-check"></i>Copiado'; });
+});
+</script>
+{% endblock %}

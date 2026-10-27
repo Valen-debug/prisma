@@ -1,0 +1,10 @@
+{
+  "name": "Prisma · Reportar una señal",
+  "short_name": "Prisma",
+  "start_url": "/reportar",
+  "display": "standalone",
+  "background_color": "#F3F5F2",
+  "theme_color": "#143D34",
+  "lang": "es",
+  "icons": [{"src": "/static/icono.svg", "sizes": "any", "type": "image/svg+xml"}]
+}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block titulo %}Escenarios{% endblock %}
+{% block h1 %}Simulador de escenarios{% endblock %}
+{% block cabecera %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-elegir" type="button" role="tab">Elegir escenarios{% if escenarios %}<span class="count">{{ escenarios|length }} activo{{ 's' if escenarios|length > 1 }}</span>{% endif %}</button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-impacto" type="button" role="tab">Impacto en el entorno</button>
+</div>
+{% endblock %}
+{% block contenido %}
+<div class="tab-content page">
+  <div class="tab-pane fade show active" id="t-elegir" role="tabpanel">
+    <p class="intro">Active uno o varios escenarios para ver cómo cambiaría el entorno ({{ T.sector }}). Se pueden combinar. El tablero, los compromisos y el informe se actualizan con lo que esté simulando. Los escenarios mueven la lectura técnica; lo que reporta {{ T.gente }} no cambia.</p>
+    {% if session.rol in ('analista', 'directivo') %}
+    <form class="whatif mb-4" method="post" action="{{ url_for('escenario_proponer') }}">
+      <span class="pre"><i class="fa fa-wand-magic-sparkles me-2"></i>¿Y si…</span>
+      <input class="form-control" name="pregunta" required minlength="6" placeholder="…el nuevo gobierno recorta los programas rurales y además hay paro camionero?" aria-label="Pregunta del escenario">
+      <button class="btn btn-primary text-nowrap" onclick="if(this.form.checkValidity()){this.disabled=true;this.form.submit();this.innerHTML='<span class=&quot;spinner-border spinner-border-sm&quot;></span> Pensando…'}">Crear escenario</button>
+    </form>{% endif %}
+    {% if entrando %}<p class="small mb-3" style="color:#7A2414"><i class="fa fa-tower-broadcast me-1"></i>Los escenarios marcados en rojo <b>ya están empezando a pasar</b>: hay {{ entrada_min }} o más señales validadas en los últimos {{ entrada_dias }} días sobre sus variables.</p>{% endif %}
+    <div class="row g-3">
+      {% for e in lista %}
+      <div class="col-md-6 col-xl-4">
+        <form method="post" action="{{ url_for('escenario_alternar', eid=e.id) }}" class="h-100">
+          <button type="submit" class="scen {{ 'on' if e.activo }}" aria-pressed="{{ 'true' if e.activo else 'false' }}">
+            {% if e.id in entrando %}<span class="entra"><i class="fa fa-tower-broadcast"></i>Empezando a pasar: {{ entrando[e.id].lugares|map(attribute='nombre')|join(', ') }}</span>{% endif %}
+            <span class="d-flex justify-content-between align-items-start gap-3 w-100"><h3>{{ e.nombre }}{% if e.origen != 'base' %} <span class="ai-chip ms-1"><i class="fa fa-wand-magic-sparkles"></i>Creado con «¿Y si…?»</span>{% endif %}</h3><span class="switch" aria-hidden="true"></span></span>
+            <p>{{ e.descripcion }}</p>
+            {% if e.cadena %}<ol class="cadena">{% for c in e.cadena[:4] %}<li class="o{{ c.orden }}"><span class="tag">{{ c.factor_nombre }}</span>{{ c.consecuencia }}</li>{% endfor %}</ol>{% endif %}
+            <span class="chips">{% for a in e.afectadas %}<span class="tag">{{ a }}</span>{% endfor %}</span>
+          </button>
+        </form>
+        {% if e.origen != 'base' and session.rol in ('analista', 'directivo') %}
+        <form method="post" action="{{ url_for('escenario_eliminar', eid=e.id) }}" class="text-end mt-1"><button class="btn btn-link btn-sm text-muted p-0">Eliminar este escenario</button></form>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if not escenarios and lista %}<p class="note">Para empezar, pruebe «{{ lista[0].nombre }}»: {{ lista[0].descripcion|minuscula }}</p>{% endif %}
+  </div>
+
+  <div class="tab-pane fade" id="t-impacto" role="tabpanel">
+    {% if escenarios %}
+    <div class="row g-4">
+      <div class="col-lg-6"><section class="panel h-100"><h2>Antes y después, por factor</h2>
+        <div class="body"><canvas id="cmpChart" height="240" role="img" aria-label="Riesgo actual frente al escenario por factor"></canvas></div>
+        <div class="table-responsive"><table class="table">
+          <thead><tr><th>Factor</th><th>Actual</th><th>Simulado</th><th class="text-end">Cambio</th></tr></thead>
+          <tbody>{% for f in factores %}{% set b = base[loop.index0] %}{% set d = (f.indice - b.indice)|round(1) %}
+            <tr><td>{{ f.nombre }}</td><td class="c-{{ b.clase }}"><span class="pill">{{ b.indice|dec }} {{ b.nivel }}</span></td>
+              <td class="c-{{ f.clase }}"><span class="pill">{{ f.indice|dec }} {{ f.nivel }}</span></td>
+              <td class="text-end fw-semibold" style="color: {{ 'var(--critico)' if d > 0 else 'var(--slate)' }}">{{ '+' if d > 0 }}{{ d|dec }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+      </section></div>
+      <div class="col-lg-6"><section class="panel h-100"><h2>Variables que cambian <small>Y la decisión que se activa</small></h2>
+        {% for v in cambiadas %}
+        <div class="row-item c-{{ v.clase }}"><span class="score">{{ v.puntaje }}</span>
+          <div><div class="t">{{ v.nombre }}</div><div class="d">{{ v.decision }} Actor: {{ v.responsable }}.</div></div>
+          <span class="d text-nowrap">antes {{ v.puntaje_base }}</span></div>
+        {% endfor %}
+      </section></div>
+    </div>
+    {% else %}
+    <section class="panel"><div class="empty">Active al menos un escenario en la pestaña «Elegir escenarios» para ver aquí cómo cambia el entorno.</div></section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }</script>
+{% if escenarios %}
+<script>
+const f = {{ factores|tojson }}, b = {{ base|tojson }};
+let cmp = null;
+function dibujar() {
+  if (cmp) return;
+  cmp = new Chart(document.getElementById('cmpChart'), {type: 'bar',
+    data: {labels: f.map(x => x.nombre), datasets: [
+      {label: 'Actual', data: b.map(x => x.indice), backgroundColor: '#143D34', borderRadius: 3},
+      {label: 'Simulado', data: f.map(x => x.indice), backgroundColor: '#D8962F', borderRadius: 3}]},
+    options: {scales: {y: {min: 0, max: 25, grid: {color: '#EDF0EA'}}, x: {grid: {display: false}}}, plugins: {legend: {position: 'bottom'}}}});
+}
+document.querySelector('[data-bs-target="#t-impacto"]').addEventListener('shown.bs.tab', dibujar);
+if (document.getElementById('t-impacto').classList.contains('active')) dibujar();
+</script>
+{% endif %}
+{% endblock %}

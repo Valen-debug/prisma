@@ -1,0 +1,114 @@
+{% from '_logo.html' import logo, marca with context %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Inicio{% endblock %} · {{ APP }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <meta name="csrf" content="{{ session.csrf }}">
+</head>
+<body>
+{% set ep = request.endpoint %}
+{% set grupo = {'variable_nueva': 'analisis', 'variable_editar': 'analisis', 'variables': 'analisis', 'tablero': 'analisis', 'escenarios': 'analisis',
+                 'informe': 'analisis', 'revision': 'analisis', 'contexto_territorio': 'analisis', 'escenario_proponer': 'analisis', 'municipio': 'territorio', 'asamblea': 'territorio'}.get(ep, ep) %}
+{% set analisis_menu = [('tablero','Tablero','fa-gauge-high','Alertas y brechas'), ('escenarios','Escenarios','fa-code-branch','¿Qué pasaría si…?'),
+                        ('variables','Variables PESTEL','fa-sliders','Lectura técnica y fuentes'), ('informe','Informe','fa-file-lines','PDF, Excel y resumen con IA'),
+                        ('contexto_territorio','Contexto','fa-mountain-sun','Cifras y fuentes')] %}
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="{{ url_for('inicio') }}">{{ marca() }}</a>
+    <nav class="mainnav" aria-label="Principal">
+      {% for e, t in [('inicio','Inicio'), ('territorio', T.mapa), ('voz', T.voz), ('decisiones','Compromisos')] %}
+      <a href="{{ url_for(e) }}" class="{{ 'on' if grupo == e }}">{{ t }}</a>
+      {% endfor %}
+      <div class="dropdown d-flex">
+        <a href="#" class="{{ 'on' if grupo == 'analisis' }}" data-bs-toggle="dropdown" aria-expanded="false">Análisis <i class="fa fa-chevron-down ms-1" style="font-size:10px"></i></a>
+        <ul class="dropdown-menu menu-analisis">
+          {% for e, t, i, d in analisis_menu %}<li><a class="dropdown-item" href="{{ url_for(e) }}"><i class="fa {{ i }}"></i><span><b>{{ t }}</b><small>{{ d }}</small></span></a></li>{% endfor %}
+        </ul>
+      </div>
+    </nav>
+    <div class="who dropdown">
+      <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menú de usuario">
+        <span class="lh"><b>{{ session.nombre }}</b>{% if session.nombre != ROLES[session.rol] %}<span>{{ ROLES[session.rol] }}</span>{% endif %}</span>
+        <span class="avatar">{{ session.nombre|iniciales }}</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{{ url_for('inicio') }}"><i class="fa fa-house"></i>Inicio</a></li>
+        {% for e, t, i in [('territorio', T.mapa,'fa-map-location-dot'), ('voz', T.voz,'fa-bullhorn'), ('decisiones','Compromisos','fa-handshake')] %}
+        <li class="d-xl-none"><a class="dropdown-item" href="{{ url_for(e) }}"><i class="fa {{ i }}"></i>{{ t }}</a></li>
+        {% endfor %}
+        {% for e, t, i, d in analisis_menu %}<li class="d-xl-none"><a class="dropdown-item" href="{{ url_for(e) }}"><i class="fa {{ i }}"></i>{{ t }}</a></li>{% endfor %}
+        <li class="d-xl-none"><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{{ url_for('reportar') }}" target="_blank" rel="noopener"><i class="fa fa-mobile-screen"></i>Formulario para reportar</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('seguimiento') }}" target="_blank" rel="noopener"><i class="fa fa-list-check"></i>Seguimiento público</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('requerimientos') }}"><i class="fa fa-diagram-project"></i>Requerimientos y arquitectura</a></li>
+        {% if session.rol == 'ti' %}<li><a class="dropdown-item" href="{{ url_for('ajustes_ia') }}"><i class="fa fa-wand-magic-sparkles"></i>Inteligencia artificial</a></li>{% endif %}
+        {% if session.rol in ('ti','directivo') %}<li><a class="dropdown-item" href="{{ url_for('bitacora') }}"><i class="fa fa-user-shield"></i>Accesos y bitácora</a></li>{% endif %}
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fa fa-right-from-bracket"></i>Cerrar sesión</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+{% if escenarios %}
+<div class="scenario-strip"><div class="wrap">
+  <i class="fa fa-bolt"></i>
+  <span>Simulando: <strong>{{ escenarios | join(' + ') }}</strong>. Las cifras muestran el entorno proyectado.</span>
+  <form method="post" action="{{ url_for('escenarios_limpiar') }}" class="ms-auto"><button class="btn btn-sm">Volver al entorno actual</button></form>
+</div></div>
+{% endif %}
+
+<main class="wrap">
+  {% with mensajes = get_flashed_messages(with_categories=true) %}{% if mensajes %}
+  <div class="flashes">{% for cat, msg in mensajes %}
+    <div class="alert alert-{{ cat }} alert-dismissible fade show mb-0" role="alert">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button></div>
+  {% endfor %}</div>
+  {% endif %}{% endwith %}
+
+  {% block encabezado %}
+  <div class="crumbs"><a href="{{ url_for('inicio') }}"><i class="fa fa-arrow-left"></i> Inicio</a><span>/</span><span>{% block miga %}{{ self.titulo() }}{% endblock %}</span></div>
+  <div class="head">
+    <h1>{% block h1 %}{{ self.titulo() }}{% endblock %}</h1>
+    {% block cabecera %}{% endblock %}
+  </div>
+  {% endblock %}
+
+  {% block contenido %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.js') }}"></script>
+<script>
+  // Protección CSRF: todo formulario que envía datos lleva el código de la sesión
+  const CSRF = document.querySelector('meta[name="csrf"]').content;
+  document.querySelectorAll('form[method="post" i]').forEach(function (f) {
+    const c = document.createElement('input'); c.type = 'hidden'; c.name = 'csrf'; c.value = CSRF; f.appendChild(c);
+  });
+  Chart.defaults.font.family = 'Plex, system-ui, sans-serif';
+  Chart.defaults.color = '#5E6B63';
+  // Los avisos de confirmación se cierran solos a los 4 s (si el mouse no está encima).
+  // Las advertencias y errores se quedan hasta que el usuario los cierre.
+  document.querySelectorAll('.flashes .alert-success, .flashes .alert-info').forEach(function (aviso) {
+    const cerrar = function () { if (!aviso.matches(':hover')) bootstrap.Alert.getOrCreateInstance(aviso).close(); else setTimeout(cerrar, 1500); };
+    setTimeout(cerrar, 4000);
+  });
+  // Recordar la pestaña abierta dentro de cada módulo
+  (function () {
+    const clave = 'tab:' + location.pathname;
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function (boton) {
+      boton.addEventListener('shown.bs.tab', function () { try { sessionStorage.setItem(clave, boton.dataset.bsTarget); } catch (e) {} });
+    });
+    try {
+      const guardada = sessionStorage.getItem(clave);
+      const boton = guardada && document.querySelector('[data-bs-target="' + guardada + '"]');
+      if (boton) bootstrap.Tab.getOrCreateInstance(boton).show();
+    } catch (e) {}
+  })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

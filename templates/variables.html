@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block titulo %}Variables PESTEL{% endblock %}
+{% block cabecera %}
+<div class="actions">
+  <a href="{{ url_for('informe_excel') }}" class="btn btn-quiet btn-sm"><i class="fa fa-file-excel"></i>Descargar Excel</a>
+  {% if session.rol == 'analista' %}<a href="{{ url_for('variable_nueva') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>Registrar variable</a>{% endif %}
+</div>
+<div class="tabs w-100">
+  <a href="{{ url_for('variables') }}" class="{{ 'on' if filtro == 'todos' }}">Todas<span class="count">{{ total }}</span></a>
+  {% for k, n in FACTORES %}<a href="{{ url_for('variables', factor=k) }}" class="{{ 'on' if filtro == k }}">{{ n }}</a>{% endfor %}
+</div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+  <p class="intro">
+  {% if session.rol == 'directivo' %}Consulte cómo está calificada cada variable, qué se reporta en campo y de dónde sale la información. Las calificaciones las registra {{ ROLES.analista|lower }}.
+  {% elif session.rol == 'ti' %}Puede editar la fuente de cada variable, su confiabilidad y cada cuánto se actualiza.
+  {% else %}Registre, califique o elimine variables. El nivel se recalcula al guardar.{% endif %}
+  {% if escenarios %} Las cifras con <i class="fa fa-bolt"></i> están cambiadas por el escenario que está simulando.{% endif %}
+  </p>
+  <section class="panel"><div class="table-responsive">
+  <table class="table table-hover">
+    <thead><tr><th>Variable</th><th>Tipo</th><th class="text-center">P × I</th><th class="text-center">Técnica</th><th class="text-center">{{ T.Gente }}</th><th class="text-center">Brecha</th><th>Tendencia</th><th>Fuente</th>{% if session.rol in ('analista','ti') %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+    {% for v in variables %}
+    <tr>
+      <td><div class="var-name">{{ v.nombre }}</div><div class="var-desc">{{ v.factor_nombre }} · {{ v.cultivo }}. {{ v.descripcion }}</div></td>
+      <td class="c-{{ 'critico' if v.tipo == 'R' else 'oportunidad' }}"><span class="pill">{{ 'Riesgo' if v.tipo == 'R' else 'Oportunidad' }}</span></td>
+      <td class="text-center text-nowrap">{{ v.prob_ef }} × {{ v.imp_ef }}</td>
+      <td class="text-center c-{{ v.clase_tecnica }}"><span class="score">{{ v.puntaje }}{% if v.modificada %}<i class="fa fa-bolt" title="Cambiado por el escenario"></i>{% endif %}</span></td>
+      <td class="text-center c-{{ v.clase_comunidad }}">{% if v.com_puntaje is not none %}<span class="score">{{ v.com_puntaje|dec }}</span><div class="var-desc">{{ v.com_n }} señales</div>{% else %}<span class="muted">–</span>{% endif %}</td>
+      <td class="text-center">{% if v.tipo == 'R' and v.brecha is not none %}<span class="gap {{ 'mas' if v.brecha >= 6 else 'menos' if v.brecha <= -6 else 'cero' }}">{{ '+' if v.brecha > 0 }}{{ v.brecha|dec }}</span>{% else %}<span class="muted">–</span>{% endif %}</td>
+      <td class="text-nowrap">{% if v.tendencia == 'Sube' %}<i class="fa fa-arrow-trend-up" style="color:var(--alto)"></i>{% elif v.tendencia == 'Baja' %}<i class="fa fa-arrow-trend-down" style="color:var(--bajo)"></i>{% else %}<i class="fa fa-arrow-right muted"></i>{% endif %} {{ v.tendencia }}<div class="var-desc">Plazo {{ v.horizonte|lower }}</div></td>
+      <td style="max-width:220px">{{ v.fuente }}<div class="var-desc">Confiabilidad {{ v.confiabilidad|lower }} · {{ v.frecuencia|lower }}</div></td>
+      {% if session.rol in ('analista','ti') %}
+      <td class="text-nowrap text-end">
+        <a class="btn btn-quiet icon-btn" href="{{ url_for('variable_editar', vid=v.id) }}" title="Editar" aria-label="Editar {{ v.nombre }}"><i class="fa fa-pen"></i></a>
+        {% if session.rol == 'analista' %}
+        <button class="btn btn-danger-quiet icon-btn" data-bs-toggle="modal" data-bs-target="#del-{{ v.id }}" title="Eliminar" aria-label="Eliminar {{ v.nombre }}"><i class="fa fa-trash-can"></i></button>
+        {% endif %}
+      </td>{% endif %}
+    </tr>
+    {% else %}<tr><td colspan="9" class="empty">No hay variables en este factor.{% if session.rol == 'analista' %} <a href="{{ url_for('variable_nueva') }}">Registre la primera</a>.{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div></section>
+</div>
+
+{% if session.rol == 'analista' %}{% for v in variables %}
+<div class="modal fade" id="del-{{ v.id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title fs-6 fw-semibold">Eliminar variable</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+  <div class="modal-body">«{{ v.nombre }}» se quitará del tablero, de los escenarios, de la {{ T.voz|lower }} y del informe.</div>
+  <div class="modal-footer"><button class="btn btn-quiet" data-bs-dismiss="modal">Cancelar</button>
+    <form method="post" action="{{ url_for('variable_eliminar', vid=v.id) }}"><button class="btn btn-danger">Eliminar variable</button></form></div>
+</div></div></div>
+{% endfor %}{% endif %}
+{% endblock %}

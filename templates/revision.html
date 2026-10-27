@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block titulo %}Revisión crítica{% endblock %}
+{% block encabezado %}
+<div class="crumbs"><a href="{{ url_for('inicio') }}">Inicio</a><span>/</span><a href="{{ url_for('tablero') }}">Tablero</a><span>/</span><span>Revisión crítica</span></div>
+<div class="head"><h1>¿Dónde podemos estar equivocados?</h1>
+  <div class="actions"><form method="post" class="m-0"><button class="btn btn-primary btn-sm" onclick="this.disabled=true;this.form.submit();this.innerHTML='<span class=&quot;spinner-border spinner-border-sm&quot;></span> Revisando…'"><i class="fa fa-scale-unbalanced"></i>{{ 'Revisar de nuevo' if r else 'Revisar ahora' }}</button></form></div>
+</div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+  <p class="intro">Un PESTEL hecho por pocas personas tiene puntos ciegos. Aquí la IA hace de abogado del diablo sobre toda la lectura: qué falta medir, qué calificaciones no cuadran y qué estamos dando por hecho. Solo sugiere; {{ ROLES.analista|lower }} decide qué cambiar.</p>
+  {% if r %}
+  <p class="small text-muted mb-3"><i class="fa fa-{{ 'wand-magic-sparkles' if r._motor == 'ia' else 'list-check' }} me-1"></i>{{ 'Revisión hecha por la IA' if r._motor == 'ia' else 'Revisión básica por reglas (IA sin configurar)' }} el {{ r._fecha }}. Se basa en el entorno actual, sin escenarios.</p>
+  <div class="row g-4">
+    <div class="col-lg-6"><section class="panel h-100"><h2>Puntos ciegos <small>Lo que falta medir</small></h2>
+      {% for p in r.puntos_ciegos %}<div class="rev-item"><div class="t"><span class="tag me-1">{{ p.factor_nombre }}</span>{{ p.tema }}</div><div class="d">{{ p.por_que }}</div>
+        {% if session.rol == 'analista' %}<a class="cambio" href="{{ url_for('variable_nueva') }}">Registrar <i class="fa fa-arrow-right"></i></a>{% endif %}</div>
+      {% else %}<div class="empty">No se encontraron puntos ciegos.</div>{% endfor %}
+    </section></div>
+    <div class="col-lg-6"><section class="panel h-100"><h2>Calificaciones dudosas <small>Hoy → propuesta</small></h2>
+      {% for d in r.dudosas %}<div class="rev-item"><div class="t">{{ d.nombre }}</div><div class="d">{{ d.observacion }}</div>
+        <div class="cambio">{{ d.antes }} → <b>{{ d.propuesta }}</b>{% if session.rol == 'analista' %}<br><a href="{{ url_for('variable_editar', vid=d.variable_id) }}">Revisar <i class="fa fa-arrow-right"></i></a>{% endif %}</div></div>
+      {% else %}<div class="empty">Las calificaciones parecen coherentes.</div>{% endfor %}
+    </section></div>
+    <div class="col-12"><section class="panel"><h2>Supuestos para poner a prueba</h2>
+      {% for s in r.supuestos %}<div class="rev-item"><div class="t"><i class="fa fa-circle-question me-2" style="color:var(--sky)"></i>{{ s }}</div></div>
+      {% else %}<div class="empty">Sin supuestos señalados.</div>{% endfor %}
+    </section></div>
+  </div>
+  {% else %}
+  <section class="panel"><div class="empty">Todavía no se ha hecho una revisión. Pulse «Revisar ahora»: toma unos segundos.</div></section>
+  {% endif %}
+</div>
+{% endblock %}

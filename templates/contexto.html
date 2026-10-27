@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block titulo %}Contexto{% endblock %}
+{% block h1 %}{{ T.contexto_titulo }}{% endblock %}
+{% block contenido %}
+<div class="page">
+  <p class="intro">Hechos públicos que sustentan las calificaciones técnicas de la demostración. Los lugares son ejemplos para mostrar el funcionamiento; las señales de campo son datos de demostración, no reportes reales.</p>
+
+  <div class="row g-4">
+    <div class="col-lg-7"><section class="panel h-100"><h2>Lo que está pasando</h2>
+      {% for clase, icono, titulo, texto, fuente in contexto %}
+      <div class="row-item c-{{ clase }}"><span class="ic-lg"><i class="fa {{ icono }}"></i></span>
+        <div><div class="t">{{ titulo }}</div><div class="d">{{ texto }} <i>{{ fuente }}.</i></div></div><span></span></div>
+      {% endfor %}
+    </section></div>
+
+    <div class="col-lg-5">
+      <section class="panel"><h2>Quiénes responden</h2><div class="body">
+        <p class="muted small">Los compromisos se asignan a estos actores. La lista se configura para cada organización.</p>
+        <div class="d-flex flex-wrap gap-1">{% for a in ACTORES %}<span class="chip"><i class="fa fa-handshake"></i>{{ a }}</span>{% endfor %}</div>
+      </div></section>
+      <section class="panel mt-4"><h2>{{ T.Unidades }} de demostración</h2>
+        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>{{ T.Unidad }}</th><th>{{ T.tipo_unidad }}</th><th>{{ T.marca }}</th></tr></thead><tbody>
+        {% for m in municipios %}<tr><td><a href="{{ url_for('municipio', mid=m.id) }}">{{ m.nombre }}</a><div class="var-desc">{{ m.departamento }}</div></td><td>{{ m.cultivo }}</td><td>{{ 'Sí' if m.pdet else 'No' }}</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel mt-4"><h2>Fuentes</h2><div class="body small">
+    <ul class="mb-0 ps-3">
+      {% for nombre, url, desc in fuentes %}<li><a href="{{ url }}" target="_blank" rel="noopener">{{ nombre }}</a>: {{ desc }}.</li>{% endfor %}
+    </ul>
+  </div></section>
+</div>
+{% endblock %}

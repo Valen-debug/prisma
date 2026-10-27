@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block titulo %}Accesos y bitácora{% endblock %}
+{% block cabecera %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-bit" type="button" role="tab">Bitácora de cambios<span class="count">{{ filas|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-roles" type="button" role="tab">Usuarios y roles</button>
+</div>
+{% endblock %}
+{% block contenido %}
+<div class="tab-content page">
+  <div class="tab-pane fade show active" id="t-bit" role="tabpanel">
+    <p class="intro">Cada ingreso y cada cambio queda registrado con quién lo hizo y cuándo.</p>
+    <section class="panel"><div class="table-responsive"><table class="table">
+      <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
+      {% for r in filas %}<tr><td class="text-nowrap muted">{{ r.fecha }}</td><td>{{ r.usuario }}</td><td class="fw-medium">{{ r.accion }}</td><td class="muted">{{ r.detalle }}</td></tr>{% endfor %}
+      </tbody></table></div></section>
+  </div>
+  <div class="tab-pane fade" id="t-roles" role="tabpanel">
+    <div class="row g-4">
+      <div class="col-lg-7"><section class="panel h-100"><div class="table-responsive"><table class="table">
+        <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Puede</th></tr></thead><tbody>
+        {% set permisos = {'directivo': 'Consultar todo, aprobar decisiones y fijar compromisos', 'analista': 'Registrar variables, validar señales de campo y actualizar avances', 'ti': 'Gestionar fuentes, frecuencia, accesos y datos de ejemplo'} %}
+        {% for u in usuarios %}<tr><td class="fw-medium">{{ u.usuario }}</td><td>{{ u.nombre }}</td><td><span class="tag">{{ ROLES[u.rol] }}</span></td><td class="muted">{{ permisos[u.rol] }}</td></tr>{% endfor %}
+        </tbody></table></div></section></div>
+      <div class="col-lg-5"><section class="panel h-100"><h2>Datos de ejemplo</h2><div class="body">
+        <p class="muted">Deja las variables, {{ T.unidades }}, señales, escenarios y compromisos de «{{ PLANTILLA.nombre }}» como al inicio. Útil antes de una presentación.</p>
+        {% if session.rol == 'ti' %}
+        <form method="post" action="{{ url_for('reiniciar') }}"><button class="btn btn-danger-quiet" onclick="return this.dataset.ok ? true : (this.dataset.ok = '1', this.lastChild.textContent = 'Confirmar: restablecer', false)"><i class="fa fa-rotate-left"></i><span>Restablecer datos de ejemplo</span></button></form>
+        {% else %}<p class="small muted mb-0">Solo el administrador de TI puede restablecer los datos.</p>{% endif %}
+      </div></section></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% from '_logo.html' import marca with context %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#143D34">
+  <title>Seguimiento · {{ APP }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='icono.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body style="background:var(--mist)">
+<header class="seg-top"><div style="max-width:720px;margin:0 auto">
+  <div class="brand">{{ marca(true) }}</div>
+  <h1>Lo que se está haciendo con sus reportes</h1>
+  <p>{{ total }} señales ya fueron revisadas. Estos son los compromisos que salieron de ellas.</p>
+</div></header>
+<main class="seg">
+  <section class="panel mb-3"><h2>Compromisos</h2>
+    {% for c in compromisos %}
+    <div class="row-item"><span class="ic-lg"><i class="fa {{ c.icono }}"></i></span>
+      <div><div class="t">{{ c.decision }}</div>
+        <div class="d">Por: {{ c.senal|lower }} · {{ c.actores or 'Actores por definir' }}{% if c.fecha_limite %} · antes del {{ c.fecha_limite }}{% endif %}</div></div>
+      <span class="avance {{ c.avance.split()[0] }}">{{ c.avance }}</span></div>
+    {% else %}<div class="empty">Todavía no hay compromisos publicados.</div>{% endfor %}
+  </section>
+  <section class="panel mb-3"><h2>De qué nos están hablando</h2><div class="body">
+    {% for t in temas %}<div class="d-flex align-items-center gap-2 mb-2"><i class="fa {{ t.icono }}" style="width:20px;color:#8A5A10"></i><span class="flex-fill">{{ t.tema }}</span><b>{{ t.n }}</b></div>{% endfor %}
+    <p class="small text-muted mb-0 mt-2">Por seguridad no publicamos lo que escribió cada persona ni desde dónde.</p>
+  </div></section>
+  <div class="d-grid"><a class="btn btn-ochre btn-lg" href="{{ url_for('reportar') }}"><i class="fa fa-bullhorn"></i>Reportar una señal</a></div>
+  <p class="small text-muted text-center mt-3">Prototipo académico · datos de demostración</p>
+</main>
+</body>
+</html>

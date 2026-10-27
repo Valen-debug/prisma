@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block titulo %}Requerimientos{% endblock %}
+{% block h1 %}Requerimientos del piloto{% endblock %}
+{% block cabecera %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-rf" type="button" role="tab">Funcionales<span class="count">14</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-rnf" type="button" role="tab">No funcionales<span class="count">6</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-arq" type="button" role="tab">Arquitectura</button>
+</div>
+{% endblock %}
+{% macro tabla(filas) %}
+<section class="panel"><div class="table-responsive"><table class="table">
+  <thead><tr><th>Código</th><th>Requerimiento</th><th>Dónde se cumple</th></tr></thead><tbody>
+  {% for c, r, d in filas %}<tr><td class="fw-semibold text-nowrap" style="color:var(--navy)">{{ c }}</td><td>{{ r }}</td><td class="muted text-nowrap">{{ d }}</td></tr>{% endfor %}
+  </tbody></table></div></section>
+{% endmacro %}
+{% block contenido %}
+<div class="tab-content page">
+  <div class="tab-pane fade show active" id="t-rf" role="tabpanel">
+    <p class="intro">Lo que el sistema debe hacer para que cualquier organización lea su entorno junto con quienes viven su entorno.</p>
+    {{ tabla([
+     ('RF-01','Registrar variables PESTEL con fuente, confiabilidad, frecuencia, y área','Variables PESTEL'),
+     ('RF-02','Calcular la lectura técnica (probabilidad × impacto) y el índice de cada factor','Inicio y Tablero'),
+     ('RF-03','Recibir señales de campo desde el celular, sin cuenta y en menos de un minuto','Formulario para reportar'),
+     ('RF-04','Validar o descartar cada señal antes de que cuente en la lectura','Voz de campo'),
+     ('RF-05','Comparar la lectura técnica con la de campo y alertar cuando se separan','Tablero y Voz, pestaña Brechas'),
+     ('RF-06','Mostrar el riesgo por lugar en un mapa y en una ficha por lugar','Mapa'),
+     ('RF-07','Simular escenarios climáticos, de mercado, de orden público y normativos','Escenarios'),
+     ('RF-08','Convertir decisiones en compromisos con actores, fecha límite y avance','Compromisos'),
+     ('RF-09','Entregar informe, Excel y una ficha sencilla para devolver la información a quienes reportan','Informe, ficha y seguimiento público'),
+     ('RF-10','IA que lee el relato (texto, voz o foto), sugiere tema y gravedad, quita datos personales y detecta temas emergentes','Formulario y Voz de campo'),
+     ('RF-11','IA que redacta boletines a partir de las señales y la lectura técnica','Ficha del lugar e Informe'),
+     ('RF-12','Escenarios «¿Y si…?» propuestos por la IA, con la cadena de consecuencias entre factores (rueda de futuros), y alerta temprana cuando las señales de campo indican que un escenario empieza a pasar','Escenarios e Inicio'),
+     ('RF-13','Panel de expertos (método Delphi): seis perspectivas PESTEL califican una variable por separado; el sistema muestra el consenso y el nivel de acuerdo','Registrar o editar variable'),
+     ('RF-14','Revisión crítica: la IA señala puntos ciegos, calificaciones dudosas y supuestos de la lectura PESTEL','Tablero, «¿Dónde podemos estar equivocados?»')]) }}
+  </div>
+  <div class="tab-pane fade" id="t-rnf" role="tabpanel">
+    <p class="intro">Cómo debe funcionar el sistema en zonas rurales: seguridad, acceso y calidad.</p>
+    {{ tabla([
+     ('RNF-01','Funcionar sin señal: el reporte se guarda en el celular y se envía al volver la conexión','Formulario para reportar'),
+     ('RNF-02','Anonimato: no se pide nombre ni teléfono; los temas de seguridad son siempre anónimos y su texto queda reservado','Formulario, Voz e Informe'),
+     ('RNF-03','Lenguaje sencillo y botones grandes, pensados para el celular','Formulario para reportar'),
+     ('RNF-04','Acceso por roles: la dirección decide, el análisis registra y valida, TI administra','Ingreso'),
+     ('RNF-05','Trazabilidad: contraseñas cifradas y registro de cada cambio','Bitácora'),
+     ('RNF-06','Protección de datos personales (Ley 1581 de 2012) y protección frente a envíos automáticos','Todo el sistema')]) }}
+  </div>
+  <div class="tab-pane fade" id="t-arq" role="tabpanel">
+    <section class="panel"><h2>Cómo fluye la información</h2>
+      <div class="flow">
+        <div><b>Dos fuentes</b><span>Datos técnicos (fuentes oficiales, gremios, prensa) y señales de campo desde el celular.</span></div>
+        <div><b>IA que escucha</b><span>Entiende el relato, protege la identidad, describe fotos y agrupa temas nuevos. Solo sugiere.</span></div>
+        <div><b>Validación humana</b><span>Una persona del equipo confirma o descarta cada señal.</span></div>
+        <div><b>Motor PESTEL</b><span>Calcula las dos lecturas, detecta brechas, prioriza, simula escenarios y sugiere acciones.</span></div>
+        <div><b>Devolución</b><span>Compromisos con actores, informe, Excel y ficha para devolver la información y página pública de seguimiento.</span></div>
+      </div>
+    </section>
+    <div class="row g-4 mt-1">
+      <div class="col-md-4"><section class="panel h-100"><h2>Piloto actual</h2><div class="body muted">Python 3 con Flask, SQLite, Bootstrap 5, Chart.js, Leaflet e IA de Claude (Anthropic) con respaldo por reglas si no hay conexión.</div></section></div>
+      <div class="col-md-4"><section class="panel h-100"><h2>Fase 2</h2><div class="body muted">FastAPI, PostgreSQL + PostGIS, React como app instalable, reportes por WhatsApp y notas de voz, y carga automática de clima y precios.</div></section></div>
+      <div class="col-md-4"><section class="panel h-100"><h2>Fase 3</h2><div class="body muted">Varias organizaciones en una sola plataforma, alertas a los actores responsables y datos abiertos para aliados.</div></section></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

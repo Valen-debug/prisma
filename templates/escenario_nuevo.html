@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block titulo %}Nuevo escenario{% endblock %}
+{% block encabezado %}
+<div class="crumbs"><a href="{{ url_for('inicio') }}">Inicio</a><span>/</span><a href="{{ url_for('escenarios') }}">Escenarios</a><span>/</span><span>Nuevo</span></div>
+<div class="head"><h1>Revisar el escenario propuesto</h1></div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+  <div class="ai-note mb-4"><i class="fa fa-wand-magic-sparkles"></i><div><b>¿Y si… {{ propuesta.pregunta }}</b><br>
+    {{ 'La IA propone estas variables y valores.' if motor == 'ia' else 'Propuesta inicial por palabras clave (IA sin configurar).' }} Ajuste lo que haga falta: quite las que no apliquen, agregue otras y cambie los valores. Nada se guarda hasta que pulse «Guardar y simular».</div></div>
+  <form method="post" action="{{ url_for('escenario_crear') }}">
+    <input type="hidden" name="pregunta" value="{{ propuesta.pregunta }}"><input type="hidden" name="motor" value="{{ motor }}">
+    <input type="hidden" name="cadena" value="{{ propuesta.cadena|tojson|forceescape }}">
+    <div class="row g-4">
+      <div class="col-lg-4"><section class="panel"><h2>El escenario</h2><div class="body">
+        <label class="form-label" for="nombre">Nombre</label><input class="form-control mb-3" id="nombre" name="nombre" value="{{ propuesta.nombre }}" required maxlength="80">
+        <label class="form-label" for="descripcion">Qué pasaría</label><textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ propuesta.descripcion }}</textarea>
+        <button class="btn btn-primary w-100 mt-4" type="submit"><i class="fa fa-play"></i>Guardar y simular</button>
+        <a class="btn btn-quiet w-100 mt-2" href="{{ url_for('escenarios') }}">Cancelar</a>
+      </div></section>
+      </div>
+      <div class="col-lg-8">
+      {% if propuesta.cadena %}
+      <section class="panel mb-4"><h2>Efecto dominó <small>Rueda de futuros</small></h2><div class="body">
+        <p class="small text-muted">Cómo un cambio arrastra a otros factores PESTEL: primero las consecuencias directas y luego las indirectas.</p>
+        <ol class="cadena domino">{% for c in propuesta.cadena %}<li class="o{{ c.orden }}"><span class="tag">{{ c.factor_nombre }}</span>{{ c.consecuencia }}</li>{% endfor %}</ol>
+      </div></section>
+      {% endif %}
+      <section class="panel"><h2>Variables que cambian <small>Hoy → en el escenario</small></h2>
+        {% set propuestas = propuesta.efectos|map(attribute='variable_id')|list %}
+        {% for e in propuesta.efectos %}
+        <div class="esc-row on">
+          <input type="hidden" name="variable" value="{{ e.variable_id }}">
+          <input class="form-check-input" type="checkbox" name="incluir_{{ e.variable_id }}" value="1" checked aria-label="Incluir {{ e.nombre }}">
+          <div><div class="t">{{ e.nombre }}</div><div class="d">{{ e.porque }}</div></div>
+          <div class="esc-vals"><span class="text-muted small">P{{ e.antes_p }}×I{{ e.antes_i }} →</span>
+            <select class="form-select form-select-sm" name="p_{{ e.variable_id }}" aria-label="Probabilidad">{% for n in range(1,6) %}<option {{ 'selected' if n == e.probabilidad }}>{{ n }}</option>{% endfor %}</select>
+            <span>×</span>
+            <select class="form-select form-select-sm" name="i_{{ e.variable_id }}" aria-label="Impacto">{% for n in range(1,6) %}<option {{ 'selected' if n == e.impacto }}>{{ n }}</option>{% endfor %}</select></div>
+        </div>
+        {% else %}<div class="empty">No se identificaron variables. Agréguelas abajo.</div>{% endfor %}
+        <details class="esc-mas"><summary>Agregar otras variables</summary>
+        {% for v in variables if v.id not in propuestas %}
+        <div class="esc-row">
+          <input type="hidden" name="variable" value="{{ v.id }}">
+          <input class="form-check-input" type="checkbox" name="incluir_{{ v.id }}" value="1" aria-label="Incluir {{ v.nombre }}">
+          <div><div class="t">{{ v.nombre }}</div><div class="d">{{ v.factor_nombre }}</div></div>
+          <div class="esc-vals"><span class="text-muted small">P{{ v.probabilidad }}×I{{ v.impacto }} →</span>
+            <select class="form-select form-select-sm" name="p_{{ v.id }}" aria-label="Probabilidad">{% for n in range(1,6) %}<option {{ 'selected' if n == [v.probabilidad + 1, 5]|min }}>{{ n }}</option>{% endfor %}</select>
+            <span>×</span>
+            <select class="form-select form-select-sm" name="i_{{ v.id }}" aria-label="Impacto">{% for n in range(1,6) %}<option {{ 'selected' if n == v.impacto }}>{{ n }}</option>{% endfor %}</select></div>
+        </div>
+        {% endfor %}
+        </details>
+      </section></div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block titulo %}Tablero{% endblock %}
+{% block h1 %}Tablero del entorno{% endblock %}
+{% block cabecera %}
+{% if session.rol in ('directivo', 'analista') %}
+<div class="actions"><a class="btn btn-quiet btn-sm" href="{{ url_for('revision') }}"><i class="fa fa-scale-unbalanced"></i>¿Dónde podemos estar equivocados?</a></div>
+{% endif %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-resumen" type="button" role="tab">Resumen</button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-alertas" type="button" role="tab">Alertas<span class="count">{{ alertas|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#brechas" type="button" role="tab">Brechas<span class="count">{{ brechas_mas|length + brechas_menos|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-opp" type="button" role="tab">Oportunidades<span class="count">{{ oportunidades|length }}</span></button>
+</div>
+{% endblock %}
+
+{% macro fila(v) -%}
+<div class="row-item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
+  <div><div class="t">{{ v.nombre }} <span class="tag ms-1">{{ v.factor_nombre }}</span></div>
+    <div class="d">{{ v.decision }}{% if v.origen == 'Comunidad' %} · <b>lo eleva {{ T.gente }}</b> (técnica {{ v.puntaje }}, campo {{ v.com_puntaje }}){% endif %}</div></div>
+  <span class="pill">{{ 'Oportunidad' if v.tipo == 'O' else v.nivel }}</span></div>
+{%- endmacro %}
+
+{% block contenido %}
+<div class="tab-content page">
+  <div class="tab-pane fade show active" id="t-resumen" role="tabpanel">
+    <section class="kpis">
+      <div class="kpi"><b>{{ kpi.criticos }}</b><span>Riesgos críticos</span></div>
+      <div class="kpi"><b>{{ kpi.altos }}</b><span>Riesgos altos</span></div>
+      <div class="kpi"><b>{{ brechas_mas|length }}</b><span>Alertas tempranas de campo</span></div>
+      <div class="kpi"><b>{{ kpi.pendientes }}</b><span>Decisiones por revisar</span></div>
+    </section>
+    <div class="row g-4">
+      <div class="col-lg-5"><section class="panel h-100">
+        <h2>Dos lecturas del entorno <small>Promedio por factor, 0 a 25</small></h2>
+        <div class="body"><canvas id="radarChart" height="300" role="img" aria-label="Radar con la lectura técnica y la de campo por factor PESTEL"></canvas></div>
+      </section></div>
+      <div class="col-lg-7"><section class="panel h-100">
+        <h2>Lo más urgente <small>Cinco riesgos de mayor nivel</small></h2>
+        {% for v in alertas[:5] %}{{ fila(v) }}{% else %}<div class="empty">No hay riesgos en nivel alto.</div>{% endfor %}
+      </section></div>
+    </div>
+    <p class="note">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad promedio de las señales validadas × cuántas personas lo reportan (últimos 60 días). El nivel usa la más alta de las dos: así una alerta de campo no se pierde.</p>
+  </div>
+
+  <div class="tab-pane fade" id="t-alertas" role="tabpanel">
+    <p class="intro">Riesgos en nivel alto o crítico (10 o más). Cada uno trae la acción sugerida.</p>
+    <section class="panel">{% for v in alertas %}{{ fila(v) }}{% else %}<div class="empty">No hay alertas activas.</div>{% endfor %}</section>
+  </div>
+
+  <div class="tab-pane fade" id="brechas" role="tabpanel">
+    <p class="intro">Dónde {{ T.gente }} y el análisis técnico no coinciden. Una brecha no es un error: es una pregunta que vale la pena llevar a campo.</p>
+    <section class="panel"><h2>Técnica frente a campo, riesgo por riesgo</h2>
+      {% for v in brechas_mas + brechas_menos %}
+      <div class="row-item c-{{ v.clase }}"><span class="gap {{ 'mas' if v.brecha > 0 else 'menos' }}">{{ '+' if v.brecha > 0 }}{{ v.brecha }}</span>
+        <div><div class="t">{{ v.nombre }}</div>
+          <div class="dual c-{{ v.clase_tecnica }}"><span>Técnica</span><span class="track"><span class="fill" style="width: {{ v.puntaje * 4 }}%"></span></span><b>{{ v.puntaje }}</b></div>
+          <div class="dual c-{{ v.clase_comunidad }} mt-1"><span>{{ T.Gente }}</span><span class="track"><span class="fill com" style="width: {{ (v.com_puntaje or 0) * 4 }}%"></span></span><b>{{ v.com_puntaje|dec }}</b></div></div>
+        <span class="pill">{{ 'Alerta temprana' if v.brecha > 0 else 'Informar' }}</span></div>
+      {% else %}<div class="empty">Las dos lecturas coinciden.</div>{% endfor %}
+    </section>
+  </div>
+
+  <div class="tab-pane fade" id="t-opp" role="tabpanel">
+    <p class="intro">Cambios del entorno que la organización puede aprovechar.</p>
+    <section class="panel">{% for v in oportunidades %}{{ fila(v) }}{% endfor %}</section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const tecnica = {{ tecnica|tojson }}, comunidad = {{ comunidad|tojson }};
+const NAVY = '#143D34', OCRE = '#D8962F';
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {labels: tecnica.map(f => f.nombre), datasets: [
+    {label: 'Lectura técnica', data: tecnica.map(f => f.indice), borderColor: NAVY, backgroundColor: 'rgba(20,61,52,.08)', pointBackgroundColor: NAVY, pointRadius: 3, borderWidth: 1.5},
+    {label: {{ T.lectura_gente|tojson }}, data: comunidad.map(f => f.indice), borderColor: OCRE, backgroundColor: 'rgba(216,150,47,.22)', pointBackgroundColor: OCRE, pointRadius: 3, borderWidth: 2, spanGaps: true}]},
+  options: {plugins: {legend: {position: 'bottom'}},
+    scales: {r: {min: 0, max: 25, ticks: {stepSize: 5, backdropColor: 'transparent', font: {size: 10}}, grid: {color: '#E2E6DF'}, angleLines: {color: '#E2E6DF'}, pointLabels: {font: {size: 12, weight: '500'}, color: '#16231D'}}}}
+});
+if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }
+</script>
+{% endblock %}

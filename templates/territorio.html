@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ T.mapa }}{% endblock %}
+{% block h1 %}{{ T.mapa_titulo }}{% endblock %}
+{% block cabecera %}
+<div class="actions"><a class="btn btn-quiet btn-sm" href="{{ url_for('voz') }}#invitar"><i class="fa fa-qrcode"></i>Invitar a reportar</a></div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+  <p class="intro">Cada punto es un lugar de demostración. El color muestra el riesgo más alto que se reporta allí en los últimos 60 días. Haga clic para ver su ficha.</p>
+  <div class="row g-4">
+    <div class="col-lg-8"><div id="mapa" role="region" aria-label="Mapa de {{ T.unidades }}"></div>
+      <div class="legend mt-2">
+        <span><i class="sw" style="background:var(--critico)"></i>Crítico</span><span><i class="sw" style="background:var(--alto)"></i>Alto</span>
+        <span><i class="sw" style="background:var(--medio)"></i>Medio</span><span><i class="sw" style="background:var(--bajo)"></i>Bajo</span>
+        <span><i class="sw" style="background:var(--faint)"></i>Sin señales</span></div>
+    </div>
+    <div class="col-lg-4">
+      <section class="muni-list">
+        {% for m in lista %}
+        <a class="muni c-{{ m.clase }}" href="{{ url_for('municipio', mid=m.id) }}">
+          <span class="dot"></span>
+          <span><span class="t">{{ m.nombre }}</span> <span class="d">{{ m.departamento }}</span><br>
+            <span class="chip cafe"><i class="fa {{ T.tipos.get(m.cultivo, 'fa-location-dot') }}"></i>{{ m.cultivo }}</span>
+            {% if m.pdet %}<span class="chip pdet">{{ T.marca }}</span>{% endif %}
+            <span class="d d-block mt-1">{% if m.principal %}Preocupa: {{ m.principal|lower }}{% else %}Sin señales recientes{% endif %}</span></span>
+          <span class="text-end"><span class="score c-{{ m.clase }}" style="color:var(--c);background:var(--cb)">{{ m.maximo or '–' }}</span><br><span class="d">{{ m.senales }} señales</span></span>
+        </a>
+        {% endfor %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script>
+const municipios = {{ lista|tojson }};
+const colores = {critico: '#B42318', alto: '#C4470F', medio: '#9A6B00', bajo: '#2F855A', nd: '#97A39B'};
+const mapa = L.map('mapa', {scrollWheelZoom: false}).setView([4.6, -74.8], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 13, attribution: '&copy; colaboradores de OpenStreetMap'
+}).addTo(mapa);
+const limites = [];
+municipios.forEach(m => {
+  const icono = L.divIcon({className: '', html: `<div class="map-pin" style="--c:${colores[m.clase]}"></div>`, iconSize: [18, 18], iconAnchor: [9, 9]});
+  const url = "{{ url_for('municipio', mid='__') }}".replace('__', m.id);
+  L.marker([m.lat, m.lon], {icon: icono, title: m.nombre}).addTo(mapa).bindPopup(
+    `<b>${m.nombre}</b>, ${m.departamento}<br>${m.cultivo}${m.pdet ? ' · ' + {{ T.marca|tojson }} : ''}<br>` +
+    `${m.senales} señales · nivel de campo ${m.maximo ?? '–'}<br>` +
+    (m.principal ? `Preocupa: ${m.principal.toLowerCase()}<br>` : '') + `<a href="${url}">Abrir ficha</a>`);
+  limites.push([m.lat, m.lon]);
+});
+if (limites.length) mapa.fitBounds(limites, {padding: [40, 40]});
+</script>
+{% endblock %}

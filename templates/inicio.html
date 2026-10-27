@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block titulo %}Inicio{% endblock %}
+{% block encabezado %}{% endblock %}
+{% block contenido %}
+{% set alertas = r.criticos + r.altos %}
+<section class="hello mb-3">
+  <div>
+    <h1>{{ T.inicio_titulo }} {{ 'en el escenario simulado' if escenarios else 'hoy' }}</h1>
+    <p>{{ r.senales }} señales de campo en {{ r.municipios }} {{ T.unidades }} y {{ r.variables }} variables técnicas.
+      {% if r.criticos %}{{ r.criticos }} {{ 'riesgo está' if r.criticos == 1 else 'riesgos están' }} en nivel crítico.{% endif %}
+      {% if r.por_validar %}{{ r.por_validar }} reportes esperan validación.{% endif %}</p>
+  </div>
+  {% if session.rol == 'analista' %}
+  <a class="btn btn-primary" href="{{ url_for('voz') }}"><i class="fa fa-check-double"></i>Validar señales{% if r.por_validar %} ({{ r.por_validar }}){% endif %}</a>
+  {% else %}
+  <a class="btn btn-ochre" href="{{ url_for('voz') }}#invitar"><i class="fa fa-qrcode"></i>Invitar a reportar</a>
+  {% endif %}
+</section>
+
+{% for x in entrando[:1] %}
+<div class="entrada mb-3"><i class="fa fa-tower-broadcast"></i>
+  <div><b>Alerta temprana: puede estar empezando el escenario «{{ x.nombre }}».</b><br>
+    <span class="small">{{ x.total }} señales validadas en los últimos 14 días en {{ x.lugares|map(attribute='nombre')|join(', ') }}.{% if entrando|length > 1 %} Hay {{ entrando|length - 1 }} {{ 'escenario más' if entrando|length == 2 else 'escenarios más' }} en la misma situación.{% endif %}</span></div>
+  <form method="post" action="{{ url_for('escenario_alternar', eid=x.id) }}"><input type="hidden" name="ir" value="impacto"><button class="btn btn-sm btn-primary text-nowrap"><i class="fa fa-play"></i>Simular qué pasaría</button></form>
+</div>{% endfor %}
+
+<section class="q3 mb-4">
+  <div class="panel"><h2><span><span class="n">1</span>¿Qué está pasando?</span></h2>
+    {% for v in urgentes %}
+    <div class="item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
+      <div><div class="t">{{ v.nombre.split('(')[0] }}</div>
+        <div class="d">{{ v.nivel }}{% if v.origen == 'Comunidad' %} · <i class="fa fa-bullhorn"></i> lo eleva {{ T.gente }}{% endif %}</div></div></div>
+    {% endfor %}
+    {% if emergentes %}<div class="item"><span class="ai-chip emer"><i class="fa fa-lightbulb"></i>{{ emergentes|length }}</span>
+      <div><div class="t">{{ 'Tema nuevo' if emergentes|length == 1 else 'Temas nuevos' }} que detectó la IA</div>
+        <div class="d">{{ emergentes|map(attribute='tema')|join(' · ') }}</div></div></div>{% endif %}
+    <a class="ver" href="{{ url_for('voz') }}">Ver la {{ T.voz|lower }} <i class="fa fa-arrow-right ms-1"></i></a>
+  </div>
+  <div class="panel"><h2><span><span class="n">2</span>¿Qué hacemos?</span></h2>
+    {% for v in por_revisar %}
+    <div class="item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
+      <div><div class="t">{{ v.decision }}</div><div class="d">Por {{ v.nombre.split(':')[0].split('(')[0]|lower }} · {{ v.responsable }}</div></div></div>
+    {% else %}<div class="item text-muted">No hay decisiones por revisar.</div>{% endfor %}
+    <a class="ver" href="{{ url_for('decisiones') }}">{{ r.pendientes }} decisiones por revisar <i class="fa fa-arrow-right ms-1"></i></a>
+  </div>
+  <div class="panel"><h2><span><span class="n">3</span>¿Quién responde?</span></h2>
+    {% for c in compromisos %}
+    <div class="item"><span class="avance {{ c.avance.split()[0] }}">{{ c.avance }}</span>
+      <div><div class="t">{{ c.decision }}</div><div class="d"><i class="fa fa-handshake"></i> {{ c.actores }}{% if c.fecha_limite %} · antes del {{ c.fecha_limite }}{% endif %}</div></div></div>
+    {% else %}<div class="item text-muted">Todavía no hay compromisos.</div>{% endfor %}
+    <a class="ver" href="{{ url_for('decisiones') }}#t-compromisos">Ver compromisos <i class="fa fa-arrow-right ms-1"></i></a>
+  </div>
+</section>
+
+<div class="sect"><h2>Lectura PESTEL</h2><p>Haga clic en un factor para ver sus variables</p></div>
+<div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-2">
+  <div class="legend"><span><i class="sw"></i>Lectura técnica</span><span><i class="sw com"></i>{{ T.lectura_gente }}</span></div>
+</div>
+<section class="pestel" aria-label="Índice de riesgo por factor PESTEL">
+  {% for f in factores %}
+  <a href="{{ url_for('variables', factor=f.clave) }}" class="c-{{ f.clase }}" title="Ver variables del factor {{ f.nombre }}">
+    <div class="l">{{ f.letra }}</div>
+    <div class="n">{{ f.nombre }}</div>
+    <div class="v"><b>{{ f.indice|dec }}</b><span>{{ f.nivel }}</span></div>
+    {% if escenarios and f.delta > 0 %}<div class="cambio sube"><i class="fa fa-arrow-up"></i> +{{ f.delta|dec }} por el escenario</div>{% endif %}
+    <div class="dual c-{{ f.tec_clase }}"><span>Técnica</span><span class="track"><span class="fill" style="width: {{ ((f.tec or 0) / 25 * 100)|round(1) }}%"></span></span><b>{{ f.tec|dec }}</b></div>
+    <div class="dual c-{{ f.com_clase }}"><span>{{ T.Gente }}</span><span class="track"><span class="fill com" style="width: {{ ((f.com or 0) / 25 * 100)|round(1) }}%"></span></span><b>{{ f.com|dec }}</b></div>
+    <div class="bar" style="width: {{ ((f.indice or 0) / 25 * 100)|round(1) }}%"></div>
+  </a>
+  {% endfor %}
+</section>
+
+<section class="voice-strip">
+  <div>
+    <h3><i class="fa fa-bullhorn me-1" style="color:var(--sky)"></i> {{ T.voz }}</h3>
+    <p>{{ r.senales }} señales de campo ya validadas.{% if r.por_validar %} {{ r.por_validar }} esperan validación.{% endif %}</p>
+    <a class="btn btn-ochre btn-sm" href="{{ url_for('voz') }}#invitar"><i class="fa fa-qrcode"></i>Invitar a reportar</a>
+  </div>
+  <div>
+    <div class="lbl">{{ T.gente|capitalize }} ve <b>más riesgo</b> que los datos</div>
+    <ul>{% for v in brechas_mas[:4] %}<li><span>{{ v.nombre.split(':')[0].split('(')[0] }}</span><span class="gap mas">+{{ v.brecha }}</span></li>{% else %}<li class="text-muted">Sin brechas por ahora.</li>{% endfor %}</ul>
+  </div>
+  <div>
+    <div class="lbl">Temas que {{ T.gente }} <b>aún no percibe</b></div>
+    <ul>{% for v in brechas_menos[:4] %}<li><span>{{ v.nombre.split('(')[0] }}</span><span class="gap menos">{{ v.brecha }}</span></li>{% else %}<li class="text-muted">Sin brechas por ahora.</li>{% endfor %}</ul>
+    <a class="small" href="{{ url_for('tablero') }}#brechas">Ver todas las brechas</a>
+  </div>
+</section>
+
+<p class="note mb-5">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad que reporta la gente × qué tanto se repite la señal. El número grande usa la más alta de las dos. La IA sugiere; el equipo valida. Datos de demostración.</p>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ m.nombre }}{% endblock %}
+{% block encabezado %}
+<div class="crumbs"><a href="{{ url_for('inicio') }}">Inicio</a><span>/</span><a href="{{ url_for('territorio') }}">{{ T.mapa }}</a><span>/</span><span>{{ m.nombre }}</span></div>
+<div class="head">
+  <div class="mb-3"><h1 class="mb-1">{{ m.nombre }}</h1>
+    <div class="d-flex gap-2 flex-wrap align-items-center"><span class="text-muted">{{ m.departamento }}</span>
+      <span class="chip cafe"><i class="fa {{ T.tipos.get(m.cultivo, 'fa-location-dot') }}"></i>{{ m.cultivo }}</span>
+      {% if m.pdet %}<span class="chip pdet">{{ T.marca_larga }}</span>{% endif %}</div></div>
+  <div class="actions">
+    <a class="btn btn-quiet btn-sm" href="{{ url_for('reportar') }}?m={{ m.id }}" target="_blank" rel="noopener"><i class="fa fa-bullhorn"></i>Reportar aquí</a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('asamblea', mid=m.id) }}"><i class="fa fa-people-roof"></i>{{ T.ficha }}</a>
+  </div>
+</div>
+{% endblock %}
+{% block contenido %}
+<div class="page">
+  <p class="intro">{{ m.nota }} La lectura técnica es la misma para toda la organización; la {{ T.lectura_gente|lower }} sale de las señales validadas de {{ m.nombre }}.</p>
+  <div class="legend mb-2"><span><i class="sw"></i>Lectura técnica regional</span><span><i class="sw com"></i>{{ T.lectura_gente }} en {{ m.nombre }}</span></div>
+  <section class="compare mb-4">
+    {% for t in tecnica %}{% set c = comunidad[loop.index0] %}
+    <div>
+      <div class="l">{{ t.letra }}</div>
+      <div class="n">{{ t.nombre }}</div>
+      <div class="dual c-{{ t.clase }}"><span>Técnica</span><span class="track"><span class="fill" style="width: {{ ((t.indice or 0) / 25 * 100)|round(1) }}%"></span></span><b>{{ t.indice|dec }}</b></div>
+      <div class="dual c-{{ c.clase }} mt-1"><span>{{ T.Gente }}</span><span class="track"><span class="fill com" style="width: {{ ((c.indice or 0) / 25 * 100)|round(1) }}%"></span></span><b>{{ c.indice|dec }}</b></div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="panel mb-4 boletin" id="boletin">
+    <h2><span><i class="fa fa-wand-magic-sparkles me-2" style="color:var(--sky)"></i>Boletín de {{ m.nombre }}</span>
+      <form method="post" action="{{ url_for('municipio_boletin', mid=m.id) }}" class="m-0">
+        <button class="btn btn-{{ 'quiet' if boletin else 'primary' }} btn-sm" onclick="this.disabled=true;this.form.submit();this.innerHTML='<span class=&quot;spinner-border spinner-border-sm&quot;></span> Redactando…'">
+          <i class="fa fa-{{ 'rotate' if boletin else 'wand-magic-sparkles' }}"></i>{{ 'Actualizar' if boletin else 'Redactar con IA' }}</button></form></h2>
+    <div class="body">
+    {% if boletin %}
+      <h3>{{ boletin.titular }}</h3>
+      <p class="mb-0">{{ boletin.que_pasa }}</p>
+      <h4>Campo y datos técnicos</h4><p class="mb-0">{{ boletin.brecha }}</p>
+      <div class="row g-4">
+        <div class="col-md-6"><h4>Para verificar en campo</h4><ul>{% for q in boletin.preguntas %}<li>{{ q }}</li>{% endfor %}</ul></div>
+        <div class="col-md-6"><h4>Acciones sugeridas</h4><ul>{% for a in boletin.acciones %}<li>{{ a.accion }} <span class="text-muted">· {{ a.actor }}</span></li>{% endfor %}</ul></div>
+      </div>
+      <p class="motor mt-3 mb-0">{{ 'Redactado por IA' if boletin._motor == 'ia' else 'Generado en modo básico' }} el {{ boletin._fecha }} con las señales validadas y la lectura técnica. Revíselo antes de compartirlo.</p>
+    {% else %}
+      <p class="text-muted mb-0">La IA lee las señales validadas de {{ m.nombre }}, la lectura técnica y los compromisos, y redacta en lenguaje sencillo qué está pasando, en qué no coinciden {{ T.gente }} y los datos, qué verificar en campo y qué hacer. El texto sirve para la {{ T.ficha|lower }}.</p>
+    {% endif %}
+    </div>
+  </section>
+
+  <div class="row g-4">
+    <div class="col-lg-6"><section class="panel h-100"><h2>Lo que más preocupa en campo <small>Últimos 60 días</small></h2>
+      {% for v in con_senal %}
+      <div class="row-item c-{{ v.clase_comunidad }}"><span class="score">{{ v.com_puntaje }}</span>
+        <div><div class="t">{{ v.nombre }}</div>
+          <div class="d">{{ v.com_n }} {{ 'señal' if v.com_n == 1 else 'señales' }} · gravedad promedio {{ v.com_gravedad|dec }} de 5 · técnica {{ v.puntaje }}</div></div>
+        {% if v.tipo == 'R' and v.brecha is not none %}<span class="gap {{ 'mas' if v.brecha >= 6 else 'menos' if v.brecha <= -6 else 'cero' }}">{{ '+' if v.brecha > 0 }}{{ v.brecha }}</span>{% else %}<span class="pill c-oportunidad">Oportunidad</span>{% endif %}
+      </div>
+      {% else %}<div class="empty">Todavía no hay señales validadas aquí.</div>{% endfor %}
+    </section></div>
+    <div class="col-lg-6"><section class="panel h-100"><h2>Señales recientes <small>{{ senales|length }}</small></h2>
+      {% for s in senales[:8] %}
+      <div class="senal"><span class="ic"><i class="fa {{ s.icono }}"></i></span>
+        <div><div class="t">{{ s.variable }}</div>
+          {% if s.sensible and not ver_sensible %}<div class="q res">Contenido reservado por seguridad.</div>
+          {% elif s.descripcion %}<div class="q">«{{ s.descripcion }}»</div>{% endif %}
+          <div class="m">{{ s.fecha|fecha_corta }} · {{ 'Anónimo' if s.sensible else s.quien }} · {{ s.estado }}</div></div>
+        <span class="dots c-{{ 'critico' if s.gravedad >= 5 else 'alto' if s.gravedad >= 4 else 'medio' }}" title="Gravedad {{ s.gravedad }} de 5">{% for i in range(5) %}<i class="{{ 'on' if i < s.gravedad }}"></i>{% endfor %}</span>
+      </div>
+      {% else %}<div class="empty">Sin señales.</div>{% endfor %}
+    </section></div>
+  </div>
+</div>
+{% endblock %}

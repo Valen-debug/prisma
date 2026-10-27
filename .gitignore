@@ -1,0 +1,6 @@
+# Archivos que no se suben a GitHub
+*.db
+__pycache__/
+.pytest_cache/
+fotos/
+.env

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block titulo %}Compromisos{% endblock %}
+{% block h1 %}Decisiones y compromisos{% endblock %}
+{% block cabecera %}
+<div class="tabs nav" role="tablist">
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-abiertas" type="button" role="tab">Por revisar<span class="count">{{ por_revisar|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-compromisos" type="button" role="tab">Compromisos<span class="count">{{ compromisos|length }}</span></button>
+  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-descartadas" type="button" role="tab">Descartadas<span class="count">{{ descartadas|length }}</span></button>
+</div>
+{% endblock %}
+
+{% macro formulario(v, e, boton) %}
+<form method="post" action="{{ url_for('decision_actualizar', vid=v.id) }}" class="dec-form">
+  <div class="row g-2">
+    <div class="col-sm-4"><label class="form-label small">Decisión</label>
+      <select class="form-select form-select-sm" name="estado">{% for o in OPCIONES.estado %}<option {{ 'selected' if e.get('estado', 'Pendiente') == o }}>{{ o }}</option>{% endfor %}</select></div>
+    <div class="col-sm-4"><label class="form-label small">Fecha límite</label>
+      <input type="date" class="form-control form-control-sm" name="fecha_limite" value="{{ e.get('fecha_limite') or '' }}"></div>
+    <div class="col-sm-4"><label class="form-label small">Comentario</label>
+      <input class="form-control form-control-sm" name="comentario" value="{{ e.get('comentario') or '' }}" placeholder="Opcional"></div>
+    <div class="col-12"><label class="form-label small mb-1">¿Quiénes se comprometen?</label>
+      <div class="actor-picks">{% set marcados = (e.get('actores') or '').split(', ') %}
+        {% for a in ACTORES %}<input type="checkbox" name="actores" value="{{ a }}" id="a-{{ v.id }}-{{ loop.index }}" {{ 'checked' if a in marcados or (not e and a == v.responsable) }}><label for="a-{{ v.id }}-{{ loop.index }}">{{ a }}</label>{% endfor %}
+      </div></div>
+  </div>
+  <div class="text-end mt-2"><button class="btn btn-primary btn-sm">{{ boton }}</button></div>
+</form>
+{% endmacro %}
+
+{% macro cabeza(v, e) %}
+<div class="d-flex flex-wrap gap-2 align-items-center">
+  <span class="score">{{ v.efectivo }}</span>
+  <span class="pill">{{ 'Oportunidad' if v.tipo == 'O' else v.nivel }}</span>
+  <span class="tag">{{ v.factor_nombre }}</span>
+  {% if v.origen == 'Comunidad' %}<span class="chip pdet"><i class="fa fa-bullhorn"></i>Lo elevó {{ T.gente }}</span>{% endif %}
+</div>
+<h3>{{ v.decision }}</h3>
+<div class="src">Por: {{ v.nombre }}. Actor sugerido: {{ v.responsable }}. Plazo {{ v.horizonte|lower }}.</div>
+{% endmacro %}
+
+{% block contenido %}
+<div class="tab-content page">
+  <div class="tab-pane fade show active" id="t-abiertas" role="tabpanel">
+    <p class="intro">Se generan solas para los riesgos en nivel alto o crítico y para las oportunidades de 12 o más, ya sea por la lectura técnica o por lo que reporta {{ T.gente }}.{% if session.rol == 'directivo' %} Al aprobar, elija quiénes se comprometen y para cuándo: así se vuelve un compromiso con seguimiento.{% else %} Solo {{ ROLES.directivo|lower }} aprueba o descarta.{% endif %}</p>
+    <section class="panel">
+    {% for v in por_revisar %}{% set e = estados.get(v.id, {}) %}
+      <div class="dec c-{{ v.clase }}" style="grid-template-columns: 1fr">
+        <div>{{ cabeza(v, e) }}
+          {% if e.get('estado') == 'En análisis' %}<div class="hist"><i class="fa fa-clock-rotate-left me-1"></i>En análisis desde {{ e.fecha }}{% if e.comentario %}: «{{ e.comentario }}»{% endif %}</div>{% endif %}</div>
+        {% if session.rol == 'directivo' %}{{ formulario(v, e, 'Guardar') }}{% endif %}
+      </div>
+    {% else %}<div class="empty">No hay decisiones por revisar.</div>{% endfor %}
+    </section>
+  </div>
+
+  <div class="tab-pane fade" id="t-compromisos" role="tabpanel">
+    <p class="intro">Decisiones aprobadas con actores y fecha. {{ ROLES.directivo }} y {{ ROLES.analista|lower }} actualizan el avance; esto es lo que se devuelve en la {{ T.ficha|lower }} y en la página pública de seguimiento.</p>
+    <section class="panel">
+    {% for v in compromisos %}{% set e = estados.get(v.id, {}) %}
+      <div class="dec c-{{ v.clase }}">
+        <div>{{ cabeza(v, e) }}
+          <div class="mt-2 d-flex flex-wrap gap-1">{% for a in (e.actores or '').split(', ') if a %}<span class="chip"><i class="fa fa-handshake"></i>{{ a }}</span>{% else %}<span class="text-muted small">Actores por definir</span>{% endfor %}</div>
+          <div class="hist"><i class="fa fa-calendar me-1"></i>{% if e.fecha_limite %}Fecha límite {{ e.fecha_limite }}{% else %}Sin fecha límite{% endif %} · aprobado por {{ e.actualizado_por }}{% if e.comentario %} · «{{ e.comentario }}»{% endif %}</div>
+        </div>
+        <div class="text-end">
+          <span class="avance {{ e.avance.split()[0] }}">{{ e.avance }}</span>
+          {% if session.rol in ('directivo', 'analista') %}
+          <form method="post" action="{{ url_for('decision_avance', vid=v.id) }}" class="mt-2 d-flex gap-1 justify-content-end">
+            <select class="form-select form-select-sm" name="avance" aria-label="Avance" style="width:auto">{% for o in OPCIONES.avance %}<option {{ 'selected' if e.avance == o }}>{{ o }}</option>{% endfor %}</select>
+            <button class="btn btn-quiet btn-sm">Actualizar</button></form>{% endif %}
+          {% if session.rol == 'directivo' %}
+          <div class="d-flex gap-2 justify-content-end mt-2">
+            <button class="btn btn-quiet btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#edit-{{ v.id }}"><i class="fa fa-pen"></i>Editar</button>
+            <form method="post" action="{{ url_for('decision_reabrir', vid=v.id) }}"><button class="btn btn-danger-quiet btn-sm"><i class="fa fa-rotate-left"></i>Reabrir</button></form>
+          </div>{% endif %}
+        </div>
+        {% if session.rol == 'directivo' %}<div class="collapse" id="edit-{{ v.id }}" style="grid-column: 1 / -1">{{ formulario(v, e, 'Guardar cambios') }}</div>{% endif %}
+      </div>
+    {% else %}<div class="empty">Todavía no hay compromisos. Apruebe una decisión para crear el primero.</div>{% endfor %}
+    </section>
+  </div>
+
+  <div class="tab-pane fade" id="t-descartadas" role="tabpanel">
+    <p class="intro">Decisiones que se descartaron. Si el entorno cambia, se pueden reabrir.</p>
+    <section class="panel">
+    {% for v in descartadas %}{% set e = estados.get(v.id, {}) %}
+      <div class="dec c-{{ v.clase }}"><div>{{ cabeza(v, e) }}<div class="hist">Descartada por {{ e.actualizado_por }} el {{ e.fecha }}{% if e.comentario %}: «{{ e.comentario }}»{% endif %}</div></div>
+        {% if session.rol == 'directivo' %}<form method="post" action="{{ url_for('decision_reabrir', vid=v.id) }}" class="text-end"><button class="btn btn-danger-quiet btn-sm"><i class="fa fa-rotate-left"></i>Reabrir</button></form>{% endif %}</div>
+    {% else %}<div class="empty">No hay decisiones descartadas.</div>{% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>if (location.hash) { const b = document.querySelector(`[data-bs-target="${location.hash}"]`); if (b) bootstrap.Tab.getOrCreateInstance(b).show(); }</script>
+{% endblock %}
