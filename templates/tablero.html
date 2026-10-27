@@ -16,7 +16,7 @@
 {% macro fila(v) -%}
 <div class="row-item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
   <div><div class="t">{{ v.nombre }} <span class="tag ms-1">{{ v.factor_nombre }}</span></div>
-    <div class="d">{{ v.decision }}{% if v.origen == 'Comunidad' %} · <b>lo eleva {{ T.gente }}</b> (técnica {{ v.puntaje }}, campo {{ v.com_puntaje }}){% endif %}</div></div>
+    <div class="d">{{ v.decision }}{% if v.origen == 'Comunidad' %} · <b>lo elevan {{ T.gente }}</b> (técnica {{ v.puntaje }} frente a {{ v.com_puntaje }}){% endif %}</div></div>
   <span class="pill">{{ 'Oportunidad' if v.tipo == 'O' else v.nivel }}</span></div>
 {%- endmacro %}
 
@@ -26,20 +26,20 @@
     <section class="kpis">
       <div class="kpi"><b>{{ kpi.criticos }}</b><span>Riesgos críticos</span></div>
       <div class="kpi"><b>{{ kpi.altos }}</b><span>Riesgos altos</span></div>
-      <div class="kpi"><b>{{ brechas_mas|length }}</b><span>Alertas tempranas de campo</span></div>
+      <div class="kpi"><b>{{ brechas_mas|length }}</b><span>Alertas tempranas</span></div>
       <div class="kpi"><b>{{ kpi.pendientes }}</b><span>Decisiones por revisar</span></div>
     </section>
     <div class="row g-4">
       <div class="col-lg-5"><section class="panel h-100">
         <h2>Dos lecturas del entorno <small>Promedio por factor, 0 a 25</small></h2>
-        <div class="body"><canvas id="radarChart" height="300" role="img" aria-label="Radar con la lectura técnica y la de campo por factor PESTEL"></canvas></div>
+        <div class="body"><canvas id="radarChart" height="300" role="img" aria-label="Radar con las dos lecturas por factor PESTEL"></canvas></div>
       </section></div>
       <div class="col-lg-7"><section class="panel h-100">
         <h2>Lo más urgente <small>Cinco riesgos de mayor nivel</small></h2>
         {% for v in alertas[:5] %}{{ fila(v) }}{% else %}<div class="empty">No hay riesgos en nivel alto.</div>{% endfor %}
       </section></div>
     </div>
-    <p class="note">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad promedio de las señales validadas × cuántas personas lo reportan (últimos 60 días). El nivel usa la más alta de las dos: así una alerta de campo no se pierde.</p>
+    <p class="note">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad promedio de las señales validadas × cuántas personas lo reportan (últimos 60 días). El nivel usa la más alta de las dos: así una alerta temprana no se pierde.</p>
   </div>
 
   <div class="tab-pane fade" id="t-alertas" role="tabpanel">
@@ -48,8 +48,8 @@
   </div>
 
   <div class="tab-pane fade" id="brechas" role="tabpanel">
-    <p class="intro">Dónde {{ T.gente }} y el análisis técnico no coinciden. Una brecha no es un error: es una pregunta que vale la pena llevar a campo.</p>
-    <section class="panel"><h2>Técnica frente a campo, riesgo por riesgo</h2>
+    <p class="intro">Dónde {{ T.gente }} y el análisis técnico no coinciden. Una brecha no es un error: es una pregunta que vale la pena llevar a {{ T.gente }}.</p>
+    <section class="panel"><h2>Técnica frente a {{ T.gente }}, riesgo por riesgo</h2>
       {% for v in brechas_mas + brechas_menos %}
       <div class="row-item c-{{ v.clase }}"><span class="gap {{ 'mas' if v.brecha > 0 else 'menos' }}">{{ '+' if v.brecha > 0 }}{{ v.brecha }}</span>
         <div><div class="t">{{ v.nombre }}</div>

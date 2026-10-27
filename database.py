@@ -82,6 +82,23 @@ CREATE TABLE IF NOT EXISTS escenarios (
     cadena TEXT                            -- JSON: cadena de consecuencias por factor (rueda de futuros)
 );
 
+CREATE TABLE IF NOT EXISTS vigia (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TEXT NOT NULL,                   -- cuándo lo encontró el agente
+    titulo TEXT NOT NULL,
+    resumen TEXT,
+    factor TEXT,
+    variable_id TEXT,                      -- variable relacionada, o NULL si es un tema nuevo
+    tipo TEXT,
+    impacto INTEGER, novedad INTEGER, credibilidad INTEGER,
+    prob_sugerida INTEGER, imp_sugerido INTEGER,
+    por_que TEXT,
+    fuente TEXT, url TEXT, fecha_fuente TEXT,
+    estado TEXT NOT NULL DEFAULT 'Por revisar',
+    revisado_por TEXT,
+    ejemplo INTEGER NOT NULL DEFAULT 0     -- 1 = señal de ejemplo de la demostración
+);
+
 CREATE TABLE IF NOT EXISTS escenario_efectos (
     escenario_id TEXT NOT NULL REFERENCES escenarios(id),
     variable_id TEXT NOT NULL REFERENCES variables(id) ON DELETE CASCADE,
@@ -259,6 +276,13 @@ def inicializar(forzar=False, plantilla=None):
                            actualizado_por, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                         (vid, estado, coment, actores, (hoy + timedelta(days=dias_limite)).strftime("%Y-%m-%d"), avance,
                          T["roles"]["directivo"], (hoy - timedelta(days=6)).strftime("%Y-%m-%d %H:%M")))
+        # Señales de ejemplo del agente vigía, tomadas de las fuentes públicas del contexto
+        for titulo, resumen, factor, vid, tipo, imp, nov, cred, ps, isug, por_que, fuente, url, dias in getattr(d, "VIGIA", []):
+            con.execute("""INSERT INTO vigia (fecha, titulo, resumen, factor, variable_id, tipo, impacto, novedad, credibilidad,
+                           prob_sugerida, imp_sugerido, por_que, fuente, url, fecha_fuente, ejemplo)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)""",
+                        ((hoy - timedelta(days=1)).strftime("%Y-%m-%d %H:%M"), titulo, resumen, factor, vid, tipo, imp, nov, cred,
+                         ps, isug, por_que, fuente, url, dias))
         con.execute("INSERT INTO bitacora (fecha, usuario, accion, detalle) VALUES (?, ?, ?, ?)",
                     (ahora(), "sistema", "Inicialización", f"Datos de demostración: {plantilla['nombre']}"))
         con.commit()

@@ -72,16 +72,16 @@
   </div>
 
   <div class="tab-pane fade" id="brechas" role="tabpanel">
-    <p class="intro">Una brecha aparece cuando la {{ T.lectura_gente|lower }} y la técnica se separan {{ umbral }} puntos o más. Si {{ T.gente }} ve más riesgo, puede ser una señal temprana que los datos todavía no muestran. Si lo percibe menos, puede faltar información en campo.</p>
+    <p class="intro">Una brecha aparece cuando la {{ T.lectura_gente|lower }} y la técnica se separan {{ umbral }} puntos o más. Si {{ T.gente }} ven más riesgo, puede ser una señal temprana que los datos todavía no muestran. Si lo perciben menos, puede faltar información para {{ T.gente }}.</p>
     <div class="row g-4">
-      <div class="col-lg-6"><section class="panel h-100"><h2>{{ T.gente|capitalize }} ve más riesgo <small>Posible alerta temprana</small></h2>
+      <div class="col-lg-6"><section class="panel h-100"><h2>{{ T.gente|capitalize }} ven más riesgo <small>Posible alerta temprana</small></h2>
         {% for v in brechas_mas %}
         <div class="row-item c-{{ v.clase_comunidad }}"><span class="gap mas">+{{ v.brecha }}</span>
           <div><div class="t">{{ v.nombre }}</div><div class="d">{{ T.Gente }} {{ v.com_puntaje }} ({{ v.com_n }} señales) frente a técnica {{ v.puntaje }}.</div></div>
           <a class="btn btn-quiet btn-sm" href="{{ url_for('decisiones') }}">Decidir</a></div>
         {% else %}<div class="empty">Sin brechas de este tipo.</div>{% endfor %}
       </section></div>
-      <div class="col-lg-6"><section class="panel h-100"><h2>{{ T.gente|capitalize }} lo percibe menos <small>Necesita información</small></h2>
+      <div class="col-lg-6"><section class="panel h-100"><h2>{{ T.gente|capitalize }} lo perciben menos <small>Necesita información</small></h2>
         {% for v in brechas_menos %}
         <div class="row-item c-oportunidad"><span class="gap menos">{{ v.brecha }}</span>
           <div><div class="t">{{ v.nombre }}</div><div class="d">{{ T.Gente }} {{ v.com_puntaje }} frente a técnica {{ v.puntaje }}. Sugerencia: {{ v.decision|minuscula }}</div></div>

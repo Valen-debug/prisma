@@ -39,18 +39,18 @@
       <p class="mb-0">{{ boletin.que_pasa }}</p>
       <h4>Campo y datos técnicos</h4><p class="mb-0">{{ boletin.brecha }}</p>
       <div class="row g-4">
-        <div class="col-md-6"><h4>Para verificar en campo</h4><ul>{% for q in boletin.preguntas %}<li>{{ q }}</li>{% endfor %}</ul></div>
+        <div class="col-md-6"><h4>Para verificar con quienes reportan</h4><ul>{% for q in boletin.preguntas %}<li>{{ q }}</li>{% endfor %}</ul></div>
         <div class="col-md-6"><h4>Acciones sugeridas</h4><ul>{% for a in boletin.acciones %}<li>{{ a.accion }} <span class="text-muted">· {{ a.actor }}</span></li>{% endfor %}</ul></div>
       </div>
       <p class="motor mt-3 mb-0">{{ 'Redactado por IA' if boletin._motor == 'ia' else 'Generado en modo básico' }} el {{ boletin._fecha }} con las señales validadas y la lectura técnica. Revíselo antes de compartirlo.</p>
     {% else %}
-      <p class="text-muted mb-0">La IA lee las señales validadas de {{ m.nombre }}, la lectura técnica y los compromisos, y redacta en lenguaje sencillo qué está pasando, en qué no coinciden {{ T.gente }} y los datos, qué verificar en campo y qué hacer. El texto sirve para la {{ T.ficha|lower }}.</p>
+      <p class="text-muted mb-0">La IA lee las señales validadas de {{ m.nombre }}, la lectura técnica y los compromisos, y redacta en lenguaje sencillo qué está pasando, en qué no coinciden {{ T.gente }} y los datos, qué verificar con quienes reportan y qué hacer. El texto sirve para la {{ T.ficha|lower }}.</p>
     {% endif %}
     </div>
   </section>
 
   <div class="row g-4">
-    <div class="col-lg-6"><section class="panel h-100"><h2>Lo que más preocupa en campo <small>Últimos 60 días</small></h2>
+    <div class="col-lg-6"><section class="panel h-100"><h2>Lo que más preocupa <small>Últimos 60 días</small></h2>
       {% for v in con_senal %}
       <div class="row-item c-{{ v.clase_comunidad }}"><span class="score">{{ v.com_puntaje }}</span>
         <div><div class="t">{{ v.nombre }}</div>

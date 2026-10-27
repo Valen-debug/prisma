@@ -12,9 +12,9 @@
 <body>
 {% set ep = request.endpoint %}
 {% set grupo = {'variable_nueva': 'analisis', 'variable_editar': 'analisis', 'variables': 'analisis', 'tablero': 'analisis', 'escenarios': 'analisis',
-                 'informe': 'analisis', 'revision': 'analisis', 'contexto_territorio': 'analisis', 'escenario_proponer': 'analisis', 'municipio': 'territorio', 'asamblea': 'territorio'}.get(ep, ep) %}
+                 'informe': 'analisis', 'revision': 'analisis', 'contexto_territorio': 'analisis', 'vigia': 'analisis', 'escenario_proponer': 'analisis', 'municipio': 'territorio', 'asamblea': 'territorio'}.get(ep, ep) %}
 {% set analisis_menu = [('tablero','Tablero','fa-gauge-high','Alertas y brechas'), ('escenarios','Escenarios','fa-code-branch','¿Qué pasaría si…?'),
-                        ('variables','Variables PESTEL','fa-sliders','Lectura técnica y fuentes'), ('informe','Informe','fa-file-lines','PDF, Excel y resumen con IA'),
+                        ('variables','Variables PESTEL','fa-sliders','Lectura técnica y fuentes'), ('vigia','Agente vigía','fa-satellite-dish','La IA revisa las noticias del entorno'), ('informe','Informe','fa-file-lines','PDF, Excel y resumen con IA'),
                         ('contexto_territorio','Contexto','fa-mountain-sun','Cifras y fuentes')] %}
 <header class="top">
   <div class="wrap">

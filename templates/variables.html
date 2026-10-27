@@ -13,7 +13,7 @@
 {% block contenido %}
 <div class="page">
   <p class="intro">
-  {% if session.rol == 'directivo' %}Consulte cómo está calificada cada variable, qué se reporta en campo y de dónde sale la información. Las calificaciones las registra {{ ROLES.analista|lower }}.
+  {% if session.rol == 'directivo' %}Consulte cómo está calificada cada variable, qué reportan {{ T.gente }} y de dónde sale la información. Las calificaciones las registra {{ ROLES.analista|lower }}.
   {% elif session.rol == 'ti' %}Puede editar la fuente de cada variable, su confiabilidad y cada cuánto se actualiza.
   {% else %}Registre, califique o elimine variables. El nivel se recalcula al guardar.{% endif %}
   {% if escenarios %} Las cifras con <i class="fa fa-bolt"></i> están cambiadas por el escenario que está simulando.{% endif %}
@@ -50,7 +50,7 @@
 {% if session.rol == 'analista' %}{% for v in variables %}
 <div class="modal fade" id="del-{{ v.id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title fs-6 fw-semibold">Eliminar variable</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-  <div class="modal-body">«{{ v.nombre }}» se quitará del tablero, de los escenarios, de la {{ T.voz|lower }} y del informe.</div>
+  <div class="modal-body">«{{ v.nombre }}» se quitará del tablero, de los escenarios, de «{{ T.voz }}» y del informe.</div>
   <div class="modal-footer"><button class="btn btn-quiet" data-bs-dismiss="modal">Cancelar</button>
     <form method="post" action="{{ url_for('variable_eliminar', vid=v.id) }}"><button class="btn btn-danger">Eliminar variable</button></form></div>
 </div></div></div>

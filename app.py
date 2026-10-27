@@ -258,8 +258,9 @@ def inicio():
     compromisos = [{**por_id[k], **d} for k, d in decs.items() if d["estado"] == "Aprobada" and k in por_id]
     emergentes = grupos_emergentes(con)
     entrando = analisis.escenarios_en_entrada(con)
+    vigia_n = con.execute("SELECT COUNT(*) FROM vigia WHERE estado = 'Por revisar'").fetchone()[0]
     con.close()
-    return render_template("inicio.html", entrando=entrando, factores=factores, r=resumen, brechas_mas=mas, brechas_menos=menos,
+    return render_template("inicio.html", entrando=entrando, vigia_n=vigia_n, factores=factores, r=resumen, brechas_mas=mas, brechas_menos=menos,
                            escenarios=nombres, urgentes=[v for v in riesgos if v["efectivo"] >= 10][:3],
                            por_revisar=por_revisar[:3], compromisos=compromisos, emergentes=emergentes)
 
@@ -798,6 +799,95 @@ def emergente_a_variable():
                      tendencia="Sube", horizonte="Corto")
     session["propuesta_variable"] = propuesta
     return redirect(url_for("variable_nueva"))
+
+
+@app.route("/vigia")
+@requiere_login
+def vigia():
+    con = conectar()
+    filas = [dict(r) for r in con.execute(
+        """SELECT g.*, v.nombre AS variable, v.probabilidad AS p_actual, v.impacto AS i_actual FROM vigia g
+           LEFT JOIN variables v ON v.id = g.variable_id ORDER BY g.id DESC""")]
+    con.close()
+    for r in filas:
+        r["puntaje"] = round((r["impacto"] or 0) * 0.5 + (r["novedad"] or 0) * 0.2 + (r["credibilidad"] or 0) * 0.3, 1)
+    por_revisar = sorted([r for r in filas if r["estado"] == "Por revisar"], key=lambda r: -r["puntaje"])
+    return render_template("vigia.html", por_revisar=por_revisar,
+                           revisadas=[r for r in filas if r["estado"] != "Por revisar"])
+
+
+@app.route("/vigia/buscar", methods=["POST"])
+@requiere_login
+@requiere_rol("analista", "directivo")
+def vigia_buscar():
+    con = conectar()
+    variables = analisis.evaluar(con, ())
+    conocidas = [r[0] for r in con.execute("SELECT titulo FROM vigia ORDER BY id DESC LIMIT 40")]
+    urls = {r[0] for r in con.execute("SELECT url FROM vigia WHERE url != ''")}
+    items, motor, error = ia.vigia_buscar(con, variables, conocidas)
+    nuevas = 0
+    for it in items:
+        if it["url"] and it["url"] in urls:
+            continue
+        con.execute("""INSERT INTO vigia (fecha, titulo, resumen, factor, variable_id, tipo, impacto, novedad, credibilidad,
+                       prob_sugerida, imp_sugerido, por_que, fuente, url, fecha_fuente)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (ahora(), it["titulo"], it["resumen"], it["factor"], it["variable_id"], it["tipo"], it["impacto"],
+                     it["novedad"], it["credibilidad"], it["prob_sugerida"], it["imp_sugerido"], it["por_que"],
+                     it["fuente"], it["url"], it["fecha_fuente"]))
+        nuevas += 1
+    registrar(con, "Agente vigía", f"{nuevas} señales nuevas" if not error else error[:120])
+    con.commit()
+    con.close()
+    if error:
+        flash(error, "warning")
+    else:
+        flash(f"El agente vigía encontró {nuevas} {'señal nueva' if nuevas == 1 else 'señales nuevas'} para revisar." if nuevas
+              else "El agente vigía no encontró noticias nuevas relevantes.", "success")
+    return redirect(url_for("vigia"))
+
+
+@app.route("/vigia/<int:gid>/<accion>", methods=["POST"])
+@requiere_login
+@requiere_rol("analista")
+def vigia_revisar(gid, accion):
+    con = conectar()
+    g_ = con.execute("SELECT * FROM vigia WHERE id = ?", (gid,)).fetchone()
+    if not g_ or accion not in ("aplicar", "aceptar", "descartar", "variable"):
+        con.close()
+        abort(404)
+    if accion == "descartar":
+        con.execute("UPDATE vigia SET estado = 'Descartada', revisado_por = ? WHERE id = ?", (session["nombre"], gid))
+        flash("Señal descartada.", "info")
+    elif accion == "aplicar" and g_["variable_id"] and g_["prob_sugerida"]:
+        v = con.execute("SELECT nombre, probabilidad, impacto FROM variables WHERE id = ?", (g_["variable_id"],)).fetchone()
+        con.execute("UPDATE variables SET probabilidad = ?, impacto = ?, actualizado = ? WHERE id = ?",
+                    (g_["prob_sugerida"], g_["imp_sugerido"], ahora(), g_["variable_id"]))
+        con.execute("UPDATE vigia SET estado = 'Aplicada', revisado_por = ? WHERE id = ?", (session["nombre"], gid))
+        registrar(con, "Variable ajustada por el agente vigía",
+                  f"{g_['variable_id']} · P{v['probabilidad']}×I{v['impacto']} → P{g_['prob_sugerida']}×I{g_['imp_sugerido']} · {g_['fuente']}")
+        flash(f"«{v['nombre']}» quedó en probabilidad {g_['prob_sugerida']} e impacto {g_['imp_sugerido']}. El nivel se recalculó.", "success")
+    elif accion == "variable":
+        session["propuesta_variable"] = {
+            "factor": g_["factor"], "nombre": g_["titulo"], "descripcion": g_["resumen"], "tipo": g_["tipo"] or "R",
+            "probabilidad": 3, "impacto": g_["impacto"] or 3, "fuente": f"{g_['fuente']} ({g_['url']})",
+            "confiabilidad": "Alta" if (g_["credibilidad"] or 0) >= 4 else "Media", "frecuencia": "Mensual",
+            "tendencia": "Sube", "horizonte": "Corto", "decision": "", "responsable": g_P_actor(), "ods": "", "senal": "",
+            "cultivo": T()["categorias"][0], "motor": "ia", "vigia": gid}
+        con.execute("UPDATE vigia SET estado = 'Convertida en variable', revisado_por = ? WHERE id = ?", (session["nombre"], gid))
+        con.commit()
+        con.close()
+        return redirect(url_for("variable_nueva"))
+    else:
+        con.execute("UPDATE vigia SET estado = 'Aceptada', revisado_por = ? WHERE id = ?", (session["nombre"], gid))
+        flash("Señal aceptada como contexto, sin cambiar la calificación.", "success")
+    con.commit()
+    con.close()
+    return redirect(url_for("vigia"))
+
+
+def g_P_actor():
+    return g.P["actores"][0]
 
 
 @app.route("/ajustes/ia", methods=["GET", "POST"])

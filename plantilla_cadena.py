@@ -186,3 +186,14 @@ PALABRAS = {
 }
 
 # Ejemplos para el agente vigía (tomados de fuentes públicas del contexto)
+
+VIGIA = [
+    ("La EUDR rige para grandes operadores desde el 31 de diciembre de 2026",
+     "Tras el aplazamiento, los grandes operadores deben probar que el cacao y el café no vienen de zonas deforestadas; los pequeños, a mediados de 2027.",
+     "L", "L1", "R", 5, 2, 5, 5, 5, "La fecha está cerca: la probabilidad ya es casi segura; sugiere subirla de 4 a 5.",
+     "Mongabay", "https://es.mongabay.com/", "11 ene 2026"),
+    ("El precio del cacao rebotó a cerca de US$4.400 por tonelada",
+     "Después de caer a unos US$3.000 a inicios de 2026, el precio volvió a subir en mayo; la volatilidad sigue alta.",
+     "E", "E1", "R", 5, 3, 4, 4, 5, "La volatilidad se mantiene: no cambia la calificación, pero conviene seguirla cada semana.",
+     "La República", "https://www.larepublica.co/", "27 may 2026"),
+]

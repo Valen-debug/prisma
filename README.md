@@ -1,6 +1,6 @@
 # Prisma · Lectura de entorno
 
-Plataforma genérica para que cualquier organización lea su entorno con el método PESTEL, uniendo dos miradas: los datos técnicos y lo que reportan desde el campo quienes viven la operación o el territorio.
+Plataforma genérica para que cualquier organización lea su entorno con el método PESTEL, uniendo dos miradas: los datos técnicos y lo que reportan sus grupos de interés: comunidades, colaboradores, proveedores, aliados y clientes.
 
 ## Enfoques: una instalación por cliente
 
@@ -15,24 +15,25 @@ El código es el mismo para todas; cada plantilla (`plantillas.py` y `plantilla_
 
 Cada cliente recibe su propia instalación con un solo enfoque; dentro de la aplicación no se cambia. El enfoque se elige al instalar en `config.py` (o con la variable de entorno `PRISMA_ENFOQUE`): `general` (por defecto), `territorio`, `cadena` o `industrial`. Para un cliente nuevo se agrega un archivo de plantilla; no se tocan las pantallas.
 
-Todos los datos son de demostración: los lugares son ejemplos y las señales de campo no son reportes reales.
+Todos los datos son de demostración: los lugares son ejemplos y las señales no son reportes reales.
 
 ## Qué hace
 
 - **Lectura PESTEL técnica**: cada variable tiene probabilidad × impacto (1 a 25), fuente, confiabilidad y área.
-- **Voz del territorio**: un formulario público para el celular (`/reportar`), sin cuenta y en menos de un minuto. Si no hay señal, el reporte se guarda en el celular y se envía solo cuando vuelve la conexión.
-- **Validación**: la técnica de campo valida o descarta cada señal antes de que cuente.
-- **Dos lecturas y brechas**: la lectura de la comunidad es la gravedad promedio de las señales validadas de los últimos 60 días × qué tanto se repiten. Cuando técnica y comunidad se separan 6 puntos o más, aparece una brecha. El nivel final usa la más alta de las dos.
+- **Grupos de interés**: comunidades, colaboradores, proveedores, aliados y clientes reportan lo que ven desde un formulario público para el celular (`/reportar`), sin cuenta y en menos de un minuto. Si no hay señal, el reporte se guarda en el celular y se envía solo cuando vuelve la conexión.
+- **Validación**: el analista de entorno valida o descarta cada señal antes de que cuente.
+- **Dos lecturas y brechas**: la lectura de grupos de interés es la gravedad promedio de las señales validadas de los últimos 60 días × qué tanto se repiten. Cuando las dos lecturas se separan 6 puntos o más, aparece una brecha. El nivel final usa la más alta de las dos.
 - **Territorio**: mapa de municipios, ficha por municipio y ficha imprimible para asamblea con código QR.
 - **Escenarios**: lluvias, El Niño, precio del cacao, precio del café, exigencias europeas (EUDR), orden público y cambios de programas.
 - **Compromisos**: las decisiones aprobadas llevan actores, fecha límite y avance.
-- **Inteligencia artificial (Claude, de Anthropic)**: la comunidad cuenta lo que pasa con sus palabras, por voz o con una foto; la IA sugiere el tema y la gravedad, quita nombres, teléfonos y lugares exactos antes de guardar, describe la foto y detecta temas nuevos que todavía no son variables. Para el equipo redacta boletines por lugar. La IA sugiere; una persona valida. Sin clave o sin internet, todo funciona con reglas simples.
+- **Inteligencia artificial (Claude, de Anthropic)**: quien reporta cuenta lo que pasa con sus palabras, por voz o con una foto; la IA sugiere el tema y la gravedad, quita nombres, teléfonos y lugares exactos antes de guardar, describe la foto y detecta temas nuevos que todavía no son variables. Para el equipo redacta boletines por lugar. La IA sugiere; una persona valida. Sin clave o sin internet, todo funciona con reglas simples.
 - **Escenarios «¿Y si…?» y alerta temprana**: la IA propone un escenario a partir de una pregunta y la persona ajusta los valores antes de guardarlo. Cada escenario avisa cuando empieza a pasar: 3 o más señales validadas en 14 días sobre sus variables en un mismo lugar.
+- **Agente vigía**: la IA busca noticias recientes en internet y propone señales para la lectura técnica, con fuente y calificadas por impacto, novedad y credibilidad; el analista aplica el ajuste, crea una variable o la descarta. Cada búsqueda usa la búsqueda web de Claude, que tiene un costo adicional.
 - **Tres métodos de prospectiva con IA** (siempre decide una persona):
   - **Panel de expertos** (método Delphi), al registrar o editar una variable: seis expertos, uno por cada factor PESTEL, califican probabilidad e impacto por separado. Prisma muestra el consenso y cuánto discrepan; si no se ponen de acuerdo, hay alta incertidumbre.
   - **Efecto dominó** (rueda de futuros), en «¿Y si…?»: además de las variables que cambian, la IA muestra la cadena de consecuencias directas e indirectas entre factores.
   - **«¿Dónde podemos estar equivocados?»**, desde el tablero: la IA hace de abogado del diablo y señala puntos ciegos, calificaciones dudosas y supuestos. Sin IA hace una revisión básica por reglas.
-- **Seguimiento público** (`/seguimiento`): la comunidad ve qué compromisos salieron de sus reportes.
+- **Seguimiento público** (`/seguimiento`): los grupos de interés ven qué compromisos salieron de sus reportes.
 - **Informe**: PDF imprimible, Excel y CSV. Los reportes de seguridad son anónimos y su texto no sale en el Excel ni lo ve el rol de TI.
 
 ## Cuentas de demostración
@@ -40,7 +41,7 @@ Todos los datos son de demostración: los lugares son ejemplos y las señales de
 | Usuario | Contraseña | Rol |
 |---|---|---|
 | coordinacion | coordinacion123 | Dirección (coordinación o gerencia): decide y fija compromisos |
-| tecnico | tecnico123 | Análisis (técnica de campo o analista): califica variables y valida señales |
+| tecnico | tecnico123 | Analista de entorno: califica variables y valida señales |
 | ti | ti123 | Administración TI: fuentes, accesos y datos de ejemplo |
 
 ## Cómo correrlo en el computador

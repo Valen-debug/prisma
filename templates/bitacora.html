@@ -19,7 +19,7 @@
     <div class="row g-4">
       <div class="col-lg-7"><section class="panel h-100"><div class="table-responsive"><table class="table">
         <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Puede</th></tr></thead><tbody>
-        {% set permisos = {'directivo': 'Consultar todo, aprobar decisiones y fijar compromisos', 'analista': 'Registrar variables, validar señales de campo y actualizar avances', 'ti': 'Gestionar fuentes, frecuencia, accesos y datos de ejemplo'} %}
+        {% set permisos = {'directivo': 'Consultar todo, aprobar decisiones y fijar compromisos', 'analista': 'Registrar variables, validar señales y actualizar avances', 'ti': 'Gestionar fuentes, frecuencia, accesos y datos de ejemplo'} %}
         {% for u in usuarios %}<tr><td class="fw-medium">{{ u.usuario }}</td><td>{{ u.nombre }}</td><td><span class="tag">{{ ROLES[u.rol] }}</span></td><td class="muted">{{ permisos[u.rol] }}</td></tr>{% endfor %}
         </tbody></table></div></section></div>
       <div class="col-lg-5"><section class="panel h-100"><h2>Datos de ejemplo</h2><div class="body">

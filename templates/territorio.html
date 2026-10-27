@@ -47,7 +47,7 @@ municipios.forEach(m => {
   const url = "{{ url_for('municipio', mid='__') }}".replace('__', m.id);
   L.marker([m.lat, m.lon], {icon: icono, title: m.nombre}).addTo(mapa).bindPopup(
     `<b>${m.nombre}</b>, ${m.departamento}<br>${m.cultivo}${m.pdet ? ' · ' + {{ T.marca|tojson }} : ''}<br>` +
-    `${m.senales} señales · nivel de campo ${m.maximo ?? '–'}<br>` +
+    `${m.senales} señales · nivel reportado ${m.maximo ?? '–'}<br>` +
     (m.principal ? `Preocupa: ${m.principal.toLowerCase()}<br>` : '') + `<a href="${url}">Abrir ficha</a>`);
   limites.push([m.lat, m.lon]);
 });

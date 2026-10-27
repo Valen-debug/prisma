@@ -181,6 +181,17 @@ SENAL_PROTEGIDA = ("bun", "P1", 5, "Volvieron a llamar desde el [teléfono] a [n
                    ["teléfono", "nombre"])
 
 # Ejemplos para el agente vigía (tomados de fuentes públicas del contexto)
+VIGIA = [
+    ("Las lluvias del primer semestre de 2026 golpearon la producción del país",
+     "Solo en café, la producción cayó 19 % entre enero y mayo porque las lluvias retrasaron las cosechas; también hubo vías afectadas.",
+     "A", "A1", "R", 5, 3, 5, 5, 4, "Confirma con cifras lo que reportan los grupos de interés; sugiere subir la probabilidad de 4 a 5.",
+     "Valora Analitik", "https://www.valoraanalitik.com/", "5 jun 2026"),
+    ("Nuevo gobierno nacional desde el 7 de agosto de 2026",
+     "El cambio de gobierno puede traer ajustes en programas, presupuesto y reglas de varios sectores.",
+     "P", "P2", "R", 3, 2, 5, 3, 3, "Seguir los anuncios; por ahora no cambia la calificación.",
+     "Vanguardia", "https://www.vanguardia.com/", "ago 2026"),
+]
+
 PALABRAS = {
     "P1": ["extors", "vacuna", "cuota", "amenaz", "armad", "seguridad", "miedo", "restricci"],
     "P2": ["gobierno", "programa", "presupuesto", "ministerio", "política"],

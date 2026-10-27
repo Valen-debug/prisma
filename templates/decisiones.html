@@ -32,7 +32,7 @@
   <span class="score">{{ v.efectivo }}</span>
   <span class="pill">{{ 'Oportunidad' if v.tipo == 'O' else v.nivel }}</span>
   <span class="tag">{{ v.factor_nombre }}</span>
-  {% if v.origen == 'Comunidad' %}<span class="chip pdet"><i class="fa fa-bullhorn"></i>Lo elevó {{ T.gente }}</span>{% endif %}
+  {% if v.origen == 'Comunidad' %}<span class="chip pdet"><i class="fa fa-bullhorn"></i>Lo elevaron {{ T.gente }}</span>{% endif %}
 </div>
 <h3>{{ v.decision }}</h3>
 <div class="src">Por: {{ v.nombre }}. Actor sugerido: {{ v.responsable }}. Plazo {{ v.horizonte|lower }}.</div>
@@ -41,7 +41,7 @@
 {% block contenido %}
 <div class="tab-content page">
   <div class="tab-pane fade show active" id="t-abiertas" role="tabpanel">
-    <p class="intro">Se generan solas para los riesgos en nivel alto o crítico y para las oportunidades de 12 o más, ya sea por la lectura técnica o por lo que reporta {{ T.gente }}.{% if session.rol == 'directivo' %} Al aprobar, elija quiénes se comprometen y para cuándo: así se vuelve un compromiso con seguimiento.{% else %} Solo {{ ROLES.directivo|lower }} aprueba o descarta.{% endif %}</p>
+    <p class="intro">Se generan solas para los riesgos en nivel alto o crítico y para las oportunidades de 12 o más, ya sea por la lectura técnica o por lo que reportan {{ T.gente }}.{% if session.rol == 'directivo' %} Al aprobar, elija quiénes se comprometen y para cuándo: así se vuelve un compromiso con seguimiento.{% else %} Solo {{ ROLES.directivo|lower }} aprueba o descarta.{% endif %}</p>
     <section class="panel">
     {% for v in por_revisar %}{% set e = estados.get(v.id, {}) %}
       <div class="dec c-{{ v.clase }}" style="grid-template-columns: 1fr">

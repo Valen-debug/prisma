@@ -3,7 +3,7 @@
 {% block h1 %}Requerimientos del piloto{% endblock %}
 {% block cabecera %}
 <div class="tabs nav" role="tablist">
-  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-rf" type="button" role="tab">Funcionales<span class="count">14</span></button>
+  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-rf" type="button" role="tab">Funcionales<span class="count">15</span></button>
   <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-rnf" type="button" role="tab">No funcionales<span class="count">6</span></button>
   <button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-arq" type="button" role="tab">Arquitectura</button>
 </div>
@@ -21,18 +21,19 @@
     {{ tabla([
      ('RF-01','Registrar variables PESTEL con fuente, confiabilidad, frecuencia, y área','Variables PESTEL'),
      ('RF-02','Calcular la lectura técnica (probabilidad × impacto) y el índice de cada factor','Inicio y Tablero'),
-     ('RF-03','Recibir señales de campo desde el celular, sin cuenta y en menos de un minuto','Formulario para reportar'),
-     ('RF-04','Validar o descartar cada señal antes de que cuente en la lectura','Voz de campo'),
-     ('RF-05','Comparar la lectura técnica con la de campo y alertar cuando se separan','Tablero y Voz, pestaña Brechas'),
+     ('RF-03','Recibir señales desde el celular, sin cuenta y en menos de un minuto','Formulario para reportar'),
+     ('RF-04','Validar o descartar cada señal antes de que cuente en la lectura','{{ T.voz }}'),
+     ('RF-05','Comparar la lectura técnica con la de {{ T.gente }} y alertar cuando se separan','Tablero y Voz, pestaña Brechas'),
      ('RF-06','Mostrar el riesgo por lugar en un mapa y en una ficha por lugar','Mapa'),
      ('RF-07','Simular escenarios climáticos, de mercado, de orden público y normativos','Escenarios'),
      ('RF-08','Convertir decisiones en compromisos con actores, fecha límite y avance','Compromisos'),
      ('RF-09','Entregar informe, Excel y una ficha sencilla para devolver la información a quienes reportan','Informe, ficha y seguimiento público'),
-     ('RF-10','IA que lee el relato (texto, voz o foto), sugiere tema y gravedad, quita datos personales y detecta temas emergentes','Formulario y Voz de campo'),
+     ('RF-10','IA que lee el relato (texto, voz o foto), sugiere tema y gravedad, quita datos personales y detecta temas emergentes','Formulario y {{ T.voz }}'),
      ('RF-11','IA que redacta boletines a partir de las señales y la lectura técnica','Ficha del lugar e Informe'),
-     ('RF-12','Escenarios «¿Y si…?» propuestos por la IA, con la cadena de consecuencias entre factores (rueda de futuros), y alerta temprana cuando las señales de campo indican que un escenario empieza a pasar','Escenarios e Inicio'),
-     ('RF-13','Panel de expertos (método Delphi): seis perspectivas PESTEL califican una variable por separado; el sistema muestra el consenso y el nivel de acuerdo','Registrar o editar variable'),
-     ('RF-14','Revisión crítica: la IA señala puntos ciegos, calificaciones dudosas y supuestos de la lectura PESTEL','Tablero, «¿Dónde podemos estar equivocados?»')]) }}
+     ('RF-12','Agente vigía: la IA busca noticias recientes y propone señales técnicas con fuente y calificación, que una persona aplica o descarta','Análisis, Agente vigía'),
+     ('RF-13','Escenarios «¿Y si…?» propuestos por la IA, con la cadena de consecuencias entre factores (rueda de futuros), y alerta temprana cuando las señales indican que un escenario empieza a pasar','Escenarios e Inicio'),
+     ('RF-14','Panel de expertos (método Delphi): seis perspectivas PESTEL califican una variable por separado; el sistema muestra el consenso y el nivel de acuerdo','Registrar o editar variable'),
+     ('RF-15','Revisión crítica: la IA señala puntos ciegos, calificaciones dudosas y supuestos de la lectura PESTEL','Tablero, «¿Dónde podemos estar equivocados?»')]) }}
   </div>
   <div class="tab-pane fade" id="t-rnf" role="tabpanel">
     <p class="intro">Cómo debe funcionar el sistema en zonas rurales: seguridad, acceso y calidad.</p>
@@ -47,7 +48,7 @@
   <div class="tab-pane fade" id="t-arq" role="tabpanel">
     <section class="panel"><h2>Cómo fluye la información</h2>
       <div class="flow">
-        <div><b>Dos fuentes</b><span>Datos técnicos (fuentes oficiales, gremios, prensa) y señales de campo desde el celular.</span></div>
+        <div><b>Dos fuentes</b><span>Datos técnicos (fuentes oficiales, gremios, prensa) y señales desde el celular.</span></div>
         <div><b>IA que escucha</b><span>Entiende el relato, protege la identidad, describe fotos y agrupa temas nuevos. Solo sugiere.</span></div>
         <div><b>Validación humana</b><span>Una persona del equipo confirma o descarta cada señal.</span></div>
         <div><b>Motor PESTEL</b><span>Calcula las dos lecturas, detecta brechas, prioriza, simula escenarios y sugiere acciones.</span></div>

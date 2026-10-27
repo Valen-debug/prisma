@@ -6,7 +6,7 @@
 <section class="hello mb-3">
   <div>
     <h1>{{ T.inicio_titulo }} {{ 'en el escenario simulado' if escenarios else 'hoy' }}</h1>
-    <p>{{ r.senales }} señales de campo en {{ r.municipios }} {{ T.unidades }} y {{ r.variables }} variables técnicas.
+    <p>{{ r.senales }} señales en {{ r.municipios }} {{ T.unidades }} y {{ r.variables }} variables técnicas.
       {% if r.criticos %}{{ r.criticos }} {{ 'riesgo está' if r.criticos == 1 else 'riesgos están' }} en nivel crítico.{% endif %}
       {% if r.por_validar %}{{ r.por_validar }} reportes esperan validación.{% endif %}</p>
   </div>
@@ -29,12 +29,14 @@
     {% for v in urgentes %}
     <div class="item c-{{ v.clase }}"><span class="score">{{ v.efectivo }}</span>
       <div><div class="t">{{ v.nombre.split('(')[0] }}</div>
-        <div class="d">{{ v.nivel }}{% if v.origen == 'Comunidad' %} · <i class="fa fa-bullhorn"></i> lo eleva {{ T.gente }}{% endif %}</div></div></div>
+        <div class="d">{{ v.nivel }}{% if v.origen == 'Comunidad' %} · <i class="fa fa-bullhorn"></i> lo elevan {{ T.gente }}{% endif %}</div></div></div>
     {% endfor %}
     {% if emergentes %}<div class="item"><span class="ai-chip emer"><i class="fa fa-lightbulb"></i>{{ emergentes|length }}</span>
       <div><div class="t">{{ 'Tema nuevo' if emergentes|length == 1 else 'Temas nuevos' }} que detectó la IA</div>
         <div class="d">{{ emergentes|map(attribute='tema')|join(' · ') }}</div></div></div>{% endif %}
-    <a class="ver" href="{{ url_for('voz') }}">Ver la {{ T.voz|lower }} <i class="fa fa-arrow-right ms-1"></i></a>
+    {% if vigia_n %}<div class="item"><span class="ai-chip"><i class="fa fa-satellite-dish"></i>{{ vigia_n }}</span>
+      <div><div class="t"><a href="{{ url_for('vigia') }}">Noticias que encontró el agente vigía</a></div><div class="d">Por revisar en la lectura técnica</div></div></div>{% endif %}
+    <a class="ver" href="{{ url_for('voz') }}">Ver {{ T.voz|lower }} <i class="fa fa-arrow-right ms-1"></i></a>
   </div>
   <div class="panel"><h2><span><span class="n">2</span>¿Qué hacemos?</span></h2>
     {% for v in por_revisar %}
@@ -73,19 +75,19 @@
 <section class="voice-strip">
   <div>
     <h3><i class="fa fa-bullhorn me-1" style="color:var(--sky)"></i> {{ T.voz }}</h3>
-    <p>{{ r.senales }} señales de campo ya validadas.{% if r.por_validar %} {{ r.por_validar }} esperan validación.{% endif %}</p>
+    <p>{{ r.senales }} señales ya validadas.{% if r.por_validar %} {{ r.por_validar }} esperan validación.{% endif %}</p>
     <a class="btn btn-ochre btn-sm" href="{{ url_for('voz') }}#invitar"><i class="fa fa-qrcode"></i>Invitar a reportar</a>
   </div>
   <div>
-    <div class="lbl">{{ T.gente|capitalize }} ve <b>más riesgo</b> que los datos</div>
+    <div class="lbl">{{ T.gente|capitalize }} ven <b>más riesgo</b> que los datos</div>
     <ul>{% for v in brechas_mas[:4] %}<li><span>{{ v.nombre.split(':')[0].split('(')[0] }}</span><span class="gap mas">+{{ v.brecha }}</span></li>{% else %}<li class="text-muted">Sin brechas por ahora.</li>{% endfor %}</ul>
   </div>
   <div>
-    <div class="lbl">Temas que {{ T.gente }} <b>aún no percibe</b></div>
+    <div class="lbl">Temas que {{ T.gente }} <b>aún no perciben</b></div>
     <ul>{% for v in brechas_menos[:4] %}<li><span>{{ v.nombre.split('(')[0] }}</span><span class="gap menos">{{ v.brecha }}</span></li>{% else %}<li class="text-muted">Sin brechas por ahora.</li>{% endfor %}</ul>
     <a class="small" href="{{ url_for('tablero') }}#brechas">Ver todas las brechas</a>
   </div>
 </section>
 
-<p class="note mb-5">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad que reporta la gente × qué tanto se repite la señal. El número grande usa la más alta de las dos. La IA sugiere; el equipo valida. Datos de demostración.</p>
+<p class="note mb-5">Lectura técnica = probabilidad × impacto (1 a 25). {{ T.lectura_gente }} = gravedad que reportan × qué tanto se repite la señal. El número grande usa la más alta de las dos. La IA sugiere; el equipo valida. Datos de demostración.</p>
 {% endblock %}

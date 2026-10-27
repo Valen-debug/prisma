@@ -13,7 +13,7 @@
 <article class="reporte">
   <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
     <div><div class="meta">{{ APP }}, informe de lectura de entorno</div><h2>{{ T.sector }}</h2>
-      <div class="meta">{{ municipios|length }} {{ T.unidades }} · {{ total_senales }} señales de campo validadas · datos de demostración</div></div>
+      <div class="meta">{{ municipios|length }} {{ T.unidades }} · {{ total_senales }} señales validadas · datos de demostración</div></div>
     <div class="meta text-end">{{ hoy }}<br>Elaborado por {{ session.nombre }}</div>
   </div>
   {% if escenarios %}<p class="mt-3 mb-0 p-3 rounded-3" style="background:var(--sky-soft)"><i class="fa fa-bolt me-1" style="color:var(--sky-ink)"></i>Escenario simulado: <strong>{{ escenarios|join(' + ') }}</strong>.</p>{% endif %}
@@ -33,10 +33,10 @@
   <h3>2. Cinco riesgos prioritarios</h3>
   <ol class="ps-3">{% for v in riesgos %}<li><strong class="fw-semibold">{{ v.nombre }}</strong>, nivel {{ v.efectivo }} ({{ v.nivel|lower }}){% if v.origen == 'Comunidad' %}, elevado por {{ T.gente }}{% endif %}. <span class="muted">{{ v.decision }} Actor: {{ v.responsable }}.</span></li>{% endfor %}</ol>
 
-  <h3>3. Lo que se ve en campo y la técnica no ve</h3>
+  <h3>3. Lo que ven {{ T.gente }} y la técnica no ve</h3>
   {% if brechas_mas or brechas_menos %}<ul class="ps-3">
-  {% for v in brechas_mas %}<li><strong class="fw-semibold">{{ v.nombre }}</strong>: {{ T.gente }} lo ve más grave (+{{ v.brecha|dec }}). <span class="muted">Posible alerta temprana; conviene verificar en campo.</span></li>{% endfor %}
-  {% for v in brechas_menos %}<li><strong class="fw-semibold">{{ v.nombre }}</strong>: {{ T.gente }} todavía no lo percibe ({{ v.brecha|dec }}). <span class="muted">Hace falta información en campo.</span></li>{% endfor %}
+  {% for v in brechas_mas %}<li><strong class="fw-semibold">{{ v.nombre }}</strong>: {{ T.gente }} lo ven más grave (+{{ v.brecha|dec }}). <span class="muted">Posible alerta temprana; conviene verificar con quienes reportan.</span></li>{% endfor %}
+  {% for v in brechas_menos %}<li><strong class="fw-semibold">{{ v.nombre }}</strong>: {{ T.gente }} todavía no lo perciben ({{ v.brecha|dec }}). <span class="muted">Hace falta información para {{ T.gente }}.</span></li>{% endfor %}
   </ul>{% else %}<p class="muted">Las dos lecturas coinciden.</p>{% endif %}
 
   {% if emergentes %}<p class="mt-3 mb-0"><b>Temas emergentes</b> (aún no son variables): {% for g in emergentes %}{{ g.tema }} ({{ g.senales|length }} reportes en {{ g.municipios|join(', ') }}){{ '; ' if not loop.last else '.' }}{% endfor %}</p>{% endif %}

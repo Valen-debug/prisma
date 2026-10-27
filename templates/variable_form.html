@@ -9,9 +9,12 @@
 {% block contenido %}
 <div class="page">
   {% if solo_fuente %}<p class="intro">Como administrador de TI puede cambiar la fuente, su confiabilidad y cada cuánto se actualiza. El resto lo califica el analista.</p>{% endif %}
+  {% if v and v.vigia %}
+  <div class="ai-note mb-4"><i class="fa fa-satellite-dish"></i><div><b>Propuesta a partir de una noticia del agente vigía.</b> Complete la calificación, la acción sugerida y el actor responsable antes de guardar.</div></div>
+  {% endif %}
   {% if v and v.emergente %}
   <div class="ai-note mb-4"><i class="fa fa-wand-magic-sparkles"></i><div><b>{{ 'Propuesta de la IA' if v.motor == 'ia' else 'Propuesta inicial' }} a partir del tema emergente «{{ v.emergente }}».</b>
-    Revise y ajuste lo que haga falta antes de guardar. Al guardar, las señales de campo sobre este tema empezarán a contar en la nueva variable.</div></div>
+    Revise y ajuste lo que haga falta antes de guardar. Al guardar, las señales sobre este tema empezarán a contar en la nueva variable.</div></div>
   {% endif %}
   <form method="post">
   {% if v and v.emergente %}<input type="hidden" name="emergente" value="{{ v.emergente }}">{% endif %}

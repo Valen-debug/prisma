@@ -246,8 +246,8 @@ ESQUEMA_BOLETIN = {
     "properties": {
         "titular": {"type": "string", "description": "Una frase que resuma la situación (máx. 14 palabras)"},
         "que_pasa": {"type": "string", "description": "2 o 3 frases: lo que más preocupa y por qué"},
-        "brecha": {"type": "string", "description": "1 o 2 frases: en qué no coinciden lo que se reporta en campo y los datos técnicos y qué podría significar"},
-        "preguntas": {"type": "array", "items": {"type": "string"}, "description": "3 preguntas para verificar en campo o en asamblea"},
+        "brecha": {"type": "string", "description": "1 o 2 frases: en qué no coinciden lo que se reporta y los datos técnicos y qué podría significar"},
+        "preguntas": {"type": "array", "items": {"type": "string"}, "description": "3 preguntas para verificar con quienes reportan o en una reunión"},
         "acciones": {"type": "array", "items": {"type": "object", "properties": {
             "accion": {"type": "string"}, "actor": {"type": "string"}},
             "required": ["accion", "actor"]}, "description": "Hasta 3 acciones concretas con el actor que debería liderarlas"},
@@ -284,9 +284,9 @@ def boletin(con, ambito, datos):
 # ---------------------------------------------------------------- 4. convertir un tema emergente en variable
 def proponer_variable(con, etiqueta, textos):
     def respaldo():
-        return {"factor": "S", "nombre": etiqueta, "descripcion": "Tema que surgió de los reportes de campo: "
+        return {"factor": "S", "nombre": etiqueta, "descripcion": "Tema que surgió de los reportes: "
                 + " / ".join(textos[:3]), "tipo": "R", "probabilidad": 3, "impacto": 3,
-                "senal": etiqueta[:40], "decision": "Verificar en campo con quienes reportaron y definir una respuesta.",
+                "senal": etiqueta[:40], "decision": "Verificar con quienes reportaron y definir una respuesta.",
                 "responsable": plantilla_activa(con)["actores"][0],
                 "cultivo": plantilla_activa(con)["T"]["categorias"][0]}
     if not disponible(con):
@@ -320,6 +320,65 @@ def probar(con):
         return True, f"Conectado con {MODELO}. La IA respondió: «{r.content[0].text.strip()}»"
     except Exception as e:
         return False, f"{type(e).__name__}: {str(e)[:220]}"
+
+
+# ---------------------------------------------------------------- 5. agente vigía: noticias del entorno
+def vigia_buscar(con, variables, conocidas=()):
+    """Busca en internet noticias recientes del entorno y propone señales técnicas calificadas.
+
+    Usa la herramienta de búsqueda web de la API de Claude. Devuelve (lista, motor, error)."""
+    if not disponible(con):
+        return [], "reglas", "El agente vigía necesita la IA configurada (busca noticias en internet)."
+    P = plantilla_activa(con)
+    lista = "\n".join(f"- {v['id']} ({v['factor_nombre']}): {v['nombre']} · P{v['probabilidad']}×I{v['impacto']}"
+                      for v in variables)
+    ya = "\n".join(f"- {u}" for u in conocidas) or "ninguna"
+    pedido = (
+        f"Organización: {P['T']['ia_contexto']}.\n\nVariables PESTEL que ya mide (id, factor, nombre, probabilidad×impacto):\n{lista}\n\n"
+        f"Noticias ya revisadas (no las repita):\n{ya}\n\n"
+        "Busque en internet noticias o informes de los últimos 60 días, de fuentes confiables, que cambien el entorno de esta "
+        "organización. Elija hasta 5 señales, las más relevantes. Para cada una indique si afecta una variable existente "
+        "(y si sugiere cambiar su probabilidad o impacto) o si es un tema nuevo.\n"
+        "Responda ÚNICAMENTE con un JSON entre <json> y </json>, una lista de objetos con: titulo (máx. 14 palabras), "
+        "resumen (máx. 40 palabras), factor (P, E, S, T, A o L), variable_id (id existente o \"nueva\"), tipo (R riesgo u O oportunidad), "
+        "impacto, novedad y credibilidad (enteros 1 a 5), prob_sugerida e imp_sugerido (enteros 1 a 5 para la variable), "
+        "por_que (máx. 30 palabras, por qué importa y por qué ese ajuste), fuente (nombre del medio), url, fecha (de la noticia).")
+    try:
+        resp = _cliente(con, 120.0, 0).messages.create(
+            model=MODELO, max_tokens=3000, system=sistema(con),
+            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 5}],
+            messages=[{"role": "user", "content": pedido}])
+        texto = "".join(getattr(b, "text", "") or "" for b in resp.content if getattr(b, "type", "") == "text")
+        m = re.search(r"<json>(.*?)</json>", texto, re.S) or re.search(r"(\[\s*\{.*\}\s*\])", texto, re.S)
+        if not m:
+            raise ValueError("La IA no devolvió la lista de señales")
+        crudas = json.loads(m.group(1))
+    except Exception as e:
+        ultimo_error["texto"] = f"{type(e).__name__}: {str(e)[:200]}"
+        return [], "reglas", "No se pudo completar la búsqueda: " + ultimo_error["texto"]
+    ids = {v["id"] for v in variables}
+    limpio = []
+    def entero(x, d=3):
+        try:
+            return min(5, max(1, int(x)))
+        except (TypeError, ValueError):
+            return d
+    for c in crudas[:5] if isinstance(crudas, list) else []:
+        if not isinstance(c, dict) or not c.get("titulo"):
+            continue
+        url = str(c.get("url") or "")
+        vid = c.get("variable_id") if c.get("variable_id") in ids else None
+        limpio.append({
+            "titulo": str(c["titulo"])[:160], "resumen": str(c.get("resumen") or "")[:400],
+            "factor": c.get("factor") if c.get("factor") in dict(FACTORES) else "S", "variable_id": vid,
+            "tipo": "O" if c.get("tipo") == "O" else "R",
+            "impacto": entero(c.get("impacto")), "novedad": entero(c.get("novedad")), "credibilidad": entero(c.get("credibilidad")),
+            "prob_sugerida": entero(c.get("prob_sugerida")) if vid else None, "imp_sugerido": entero(c.get("imp_sugerido")) if vid else None,
+            "por_que": str(c.get("por_que") or "")[:300], "fuente": str(c.get("fuente") or "")[:80],
+            "url": url if url.startswith(("http://", "https://")) else "", "fecha_fuente": str(c.get("fecha") or "")[:30],
+        })
+    ultimo_error["texto"] = None
+    return limpio, "ia", None
 
 
 # ---------------------------------------------------------------- 6. escenarios «¿Y si…?»
